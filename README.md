@@ -203,6 +203,16 @@ Ketika modul tidak dapat terhubung ke WiFi yang tersimpan, modul secara otomatis
 
 ---
 
+
+---
+
+## 🔗 Referensi & Sumber Riset Sesi AI
+
+Pengembangan spesifikasi, arsitektur FreeRTOS dual-core, dan logika firmware modul ini didokumentasikan dalam sesi riset interaktif:
+* 🤖 **Sesi Google Gemini AI:** [https://gemini.google.com/app/9b15b21a9066dd07](https://gemini.google.com/app/9b15b21a9066dd07)
+* 📄 **Laporan Lengkap PDF:** [report.pdf](report.pdf)
+
+
 ## 📜 12. Lisensi & Hak Cipta
 
 Proyek ini dilisensikan di bawah **MIT License**.  
