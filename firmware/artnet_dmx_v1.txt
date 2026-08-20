@@ -1,0 +1,158 @@
+#include <WiFi.h>
+#include <WiFiManager.h>
+#include <ArtnetWifi.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+HardwareSerial DMXSerial(2);
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+// PIN
+#define TX_PIN 17
+#define RX_PIN 16
+#define DE_RE_PIN 4
+
+ArtnetWifi artnet;
+
+uint8_t dmxData[512];
+unsigned long lastDmx = 0;
+unsigned long lastLCD = 0;
+
+// ====== CENTER TEXT ======
+int centerPos(String text) {
+  return (16 - text.length()) / 2;
+}
+
+// ====== TYPING EFFECT ======
+void typingEffect(String line1, String line2) {
+  lcd.clear();
+
+  int pos1 = centerPos(line1);
+  int pos2 = centerPos(line2);
+
+  lcd.setCursor(pos1, 0);
+  for (int i = 0; i < line1.length(); i++) {
+    lcd.print(line1[i]);
+    delay(80);
+  }
+
+  lcd.setCursor(pos2, 1);
+  for (int i = 0; i < line2.length(); i++) {
+    lcd.print(line2[i]);
+    delay(80);
+  }
+}
+
+// ====== SIMPLE SCREEN ======
+void showScreen(String l1, String l2) {
+  lcd.clear();
+  lcd.setCursor(centerPos(l1), 0);
+  lcd.print(l1);
+  lcd.setCursor(centerPos(l2), 1);
+  lcd.print(l2);
+}
+
+// ====== DMX CALLBACK ======
+void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* data) {
+  for (int i = 0; i < length && i < 512; i++) {
+    dmxData[i] = data[i];
+  }
+}
+
+// ====== SEND DMX ======
+void sendDMX() {
+  DMXSerial.end();
+
+  pinMode(TX_PIN, OUTPUT);
+  digitalWrite(TX_PIN, LOW);
+  delayMicroseconds(120);
+
+  digitalWrite(TX_PIN, HIGH);
+  delayMicroseconds(12);
+
+  DMXSerial.begin(250000, SERIAL_8N2, RX_PIN, TX_PIN);
+
+  DMXSerial.write(0);
+
+  for (int i = 0; i < 512; i++) {
+    DMXSerial.write(dmxData[i]);
+  }
+
+  delayMicroseconds(50);
+}
+
+// ====== SETUP ======
+void setup() {
+  Serial.begin(115200);
+
+  lcd.init();
+  lcd.backlight();
+
+  // Boot animation
+  typingEffect("ZZLIGHT", "Booting...");
+  delay(1000);
+
+  // MAX485 TX
+  pinMode(DE_RE_PIN, OUTPUT);
+  digitalWrite(DE_RE_PIN, HIGH);
+
+  for (int i = 0; i < 512; i++) dmxData[i] = 0;
+
+  WiFiManager wm;
+
+  // WiFi Setup Screen
+  showScreen("WiFi Setup...", "AP: ARTNET-DMX");
+
+  bool res = wm.autoConnect("ARTNET-DMX");
+
+  if (!res) {
+    showScreen("WiFi Failed!", "Reconnecting...");
+    delay(2000);
+    ESP.restart();
+  }
+
+  // Connected Screen
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("WiFi Connected!");
+
+  lcd.setCursor(0, 1);
+  lcd.print("IP ");
+  lcd.print(WiFi.localIP());
+
+  Serial.print("IP: ");
+  Serial.println(WiFi.localIP());
+
+  delay(2500);
+
+  // Start Art-Net
+  artnet.begin();
+  artnet.setArtDmxCallback(onDmxFrame);
+
+  DMXSerial.begin(250000, SERIAL_8N2, RX_PIN, TX_PIN);
+}
+
+// ====== LOOP ======
+void loop() {
+  artnet.read();
+
+  // DMX stable refresh
+  if (millis() - lastDmx > 25) {
+    sendDMX();
+    lastDmx = millis();
+  }
+
+  // Running screen
+  if (millis() - lastLCD > 2000) {
+    lcd.clear();
+
+    lcd.setCursor(0, 0);
+    lcd.print("IP:");
+    lcd.print(WiFi.localIP());
+
+    lcd.setCursor(0, 1);
+    lcd.print("ARTNET-DMX Run");
+
+    lastLCD = millis();
+  }
+}

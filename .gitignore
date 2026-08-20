@@ -1,0 +1,16 @@
+# Arduino Build Output & Temp
+build/
+*.hex
+*.elf
+*.bin
+*.d
+*.o
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+*.swp
+*.bak
+*.tmp
+.vscode/
+.idea/

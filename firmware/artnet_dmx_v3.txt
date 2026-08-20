@@ -1,0 +1,676 @@
+/*
+ * ZZLIGHT PROJECT - ARTNET TO DMX MODULE
+ * Hardware : ESP32 DevKit V1, MAX485, LCD 16x2 I2C
+ * Core     : ESP32 Board v3.3.8
+ * Features : Art-Net, DMX Engine (Double Buffering + Spinlock), WebServer, WPA2-Enterprise, Advanced LCD Logic
+ * Created by @zzdree_
+ */
+
+#include <WiFi.h>
+#include <WebServer.h>
+#include <Preferences.h>
+#include <LiquidCrystal_I2C.h>
+#include <WiFiUdp.h>
+#include <ESPmDNS.h>
+#include <string.h>
+#include <time.h>
+
+// --- PINS CONFIGURATION ---
+#define DMX_TX_PIN 17
+#define DMX_RX_PIN 16
+#define DMX_EN_PIN 4
+
+// --- DMX & ARTNET VARIABLES (ENTERPRISE GRADE) ---
+uint8_t bufferA[512];
+uint8_t bufferB[512];
+uint8_t* writeBuffer = bufferA; // Core 1 menulis ArtNet ke sini
+uint8_t* readBuffer = bufferB;  // Core 0 mengirim DMX dari sini
+volatile bool frameReady = false;
+
+// Kunci Brankas (Spinlock) untuk mencegah tabrakan Core 0 vs Core 1
+portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;
+
+// Filter Universe DMX (Default Universe 0)
+const uint8_t myUniverse = 0;
+
+WiFiUDP Udp;
+const int artNetPort = 6454;
+volatile unsigned long lastArtNetTime = 0;
+TaskHandle_t DMXTask;
+
+// --- SYSTEM & WIFI VARIABLES ---
+Preferences prefs;
+WebServer server(80);
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+String ssid = "";
+String pass = "";
+String entUser = "";
+String entPass = "";
+bool isAdvanced = false;
+
+unsigned long wifiLostTime = 0;
+int connectedDevices = 0;
+
+// --- STATE MACHINE ---
+enum ScreenState {
+  S_BOOT,           // Screen 1
+  S_CONNECTING,     // Screen 2
+  S_WIFI_ERR,       // Screen 3
+  S_AP_MODE,        // Screen 4
+  S_DEV_CONN,       // Screen 5
+  S_MOD_CONN1,      // Screen 6
+  S_MOD_CONN2,      // Screen 7
+  S_RUN,            // Screen 8
+  S_WIFI_RST,       // Screen 9
+  S_WIFI_DISCONN1,  // Screen 10 (Reconnect <30s)
+  S_WIFI_DISCONN2,  // Screen 10 (Reboot >30s)
+  S_WIFI_FAIL       // Screen 11
+};
+ScreenState currentState = S_BOOT;
+
+// --- FUNCTION PROTOTYPES ---
+void changeScreen(ScreenState newState);
+void handleLCDAnimation();
+void startAP();
+void connectWiFi();
+void setupAPServer();
+void setupRunServer();
+void DMXCoreTask(void *pvParameters);
+
+// Animasi variabel
+unsigned long lastAnimTime = 0;
+int animStep = 0;
+String monthNames[12] = {"Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"};
+String dayNames[7] = {"Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"};
+
+// --- HTML TEMPLATES ---
+
+// 1. Setup Page (AP Mode)
+const char AP_HTML[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Setup ARTNET-DMX</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@1,900&display=swap');
+    body { background-color: #121212; color: #ffffff; font-family: sans-serif; text-align: center; margin-top: 50px; }
+    h1 { font-family: 'Roboto', sans-serif; font-weight: 900; font-style: italic; letter-spacing: 2px; }
+    
+    input[type="text"], input[type="password"] { padding: 12px; margin: 10px auto; width: 100%; max-width: 324px; border-radius: 5px; border: none; font-size: 16px; box-sizing: border-box; display: block; }
+    
+    button { background-color: #2ecc71; color: white; padding: 12px 30px; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; margin-left: auto; margin-right: auto; width: 100%; max-width: 324px; box-sizing: border-box; display: block; }
+    .adv-btn { background: none; color: #aaa; border: none; font-size: 14px; margin-top: 20px; cursor: pointer; text-decoration: underline; }
+    #advanced-fields { display: none; overflow: hidden; transition: max-height 0.3s ease-out; width: 100%; }
+    
+    .form-container { display: flex; flex-direction: column; align-items: center; width: 100%; padding: 0 20px; box-sizing: border-box; }
+    
+    .wifi-box { background: #1e1e1e; border-radius: 8px; padding: 10px; margin: 15px auto; width: 100%; max-width: 324px; max-height: 200px; overflow-y: auto; border: 1px solid #333; box-sizing: border-box; }
+    .wifi-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 5px; border-bottom: 1px solid #333; cursor: pointer; transition: 0.2s; }
+    .wifi-item:last-child { border-bottom: none; }
+    .wifi-item:hover { background: #2a2a2a; }
+    .w-left { font-size: 15px; text-align: left; color: #fff; pointer-events: none; display: flex; align-items: center; gap: 8px; }
+    .w-right { font-size: 14px; color: #aaa; pointer-events: none; display: flex; align-items: center; gap: 8px; }
+  </style>
+  <script>
+    function fillSSID(el) {
+      document.getElementById('ssid').value = el.getAttribute('data-ssid');
+      document.getElementById('pass').focus(); 
+    }
+
+    function scan() {
+      document.getElementById('wb').innerHTML = '<div style="padding:20px;color:#aaa;">Scanning WiFi...</div>';
+      fetch('/scan').then(r=>r.json()).then(d=>{
+        let h = '';
+        if(d.length == 0) h = '<div style="padding:20px;color:#aaa;">No WiFi found</div>';
+        d.forEach(w => {
+          let safeSsid = w.ssid.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+          let lock = w.sec ? '🔒' : ''; 
+          h += `<div class="wifi-item" onclick="fillSSID(this)" data-ssid="${safeSsid}">
+                  <div class="w-left"><span>📶</span> <span>${w.ssid}</span></div>
+                  <div class="w-right"><span>${lock}</span> <span>${w.sig}%</span></div>
+                </div>`;
+        });
+        document.getElementById('wb').innerHTML = h;
+      }).catch(() => {
+        document.getElementById('wb').innerHTML = '<div style="padding:20px;color:#e74c3c;">Scan failed</div>';
+      });
+    }
+
+    function toggleAdvanced() {
+      var x = document.getElementById("advanced-fields");
+      var modeInput = document.getElementById("isAdv");
+      if (x.style.display === "block") { x.style.display = "none"; modeInput.value = "0"; } 
+      else { x.style.display = "block"; modeInput.value = "1"; }
+    }
+    window.onload = scan;
+  </script>
+</head>
+<body>
+  <h1>ZZLIGHT PROJECT</h1>
+  
+  <div class="form-container">
+    <div id="wb" class="wifi-box"></div>
+
+    <form action="/connect" method="POST" style="width: 100%;">
+      <input type="hidden" name="isAdv" id="isAdv" value="0">
+      <input type="text" name="ssid" id="ssid" placeholder="WiFi SSID" required>
+      <input type="password" name="pass" id="pass" placeholder="WiFi Password">
+      <div id="advanced-fields">
+        <input type="text" name="entUser" placeholder="Account Username">
+        <input type="password" name="entPass" placeholder="Account Password">
+      </div>
+      <button type="submit">Connect</button>
+    </form>
+    <button class="adv-btn" type="button" onclick="toggleAdvanced()">Mode Advanced</button>
+  </div>
+</body>
+</html>
+)rawliteral";
+
+// 2. Saved Page (After AP Mode Submit)
+const char SAVED_HTML[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Setup Saved</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@1,900&display=swap');
+    body { background-color: #121212; color: #ffffff; font-family: sans-serif; text-align: center; margin-top: 80px; }
+    h1 { font-family: 'Roboto', sans-serif; font-weight: 900; font-style: italic; letter-spacing: 2px; }
+    p { font-size: 18px; margin-top: 20px; color: #ccc; }
+  </style>
+</head>
+<body>
+  <h1>ZZLIGHT PROJECT</h1>
+  <p>WiFi and Password Saved, Rebooting...</p>
+</body>
+</html>
+)rawliteral";
+
+// 3. Monitor Page (Run Mode) - 2 Tombol Sejajar
+const char RUN_HTML[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZZLIGHT Monitor</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@1,900&display=swap');
+    body { background-color: #121212; color: #ffffff; font-family: monospace, sans-serif; text-align: center; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center;}
+    h1 { font-family: 'Roboto', sans-serif; font-weight: 900; font-style: italic; letter-spacing: 2px; }
+    
+    .box { background-color: #1e1e1e; padding: 20px; border-radius: 10px; text-align: left; max-width: 400px; width: 100%; box-sizing: border-box; font-size: 15px; line-height: 1.8; }
+    .box span.lbl { display: inline-block; width: 80px; }
+    
+    .btn-container { display: flex; flex-direction: column; align-items: center; gap: 12px; max-width: 400px; margin: 20px 0 0 0; width: 100%; box-sizing: border-box; }
+    .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; box-sizing: border-box; font-family: sans-serif; }
+    
+    .btn-red { background-color: #e74c3c; color: white; }
+    .btn-orange { background-color: #f39c12; color: white; }
+    .footer { margin-top: 30px; font-size: 12px; font-style: italic; color: #7f8c8d; font-family: sans-serif;}
+    .clr-g { color: #2ecc71; font-weight: bold;}
+    .clr-y { color: #f1c40f; font-weight: bold;}
+    .clr-r { color: #e74c3c; font-weight: bold;}
+  </style>
+  <script>
+    function updateData() {
+      fetch('/status').then(r => r.json()).then(d => {
+        document.getElementById('dt').innerHTML = `<span class="lbl">Date</span>: ${d.date}`;
+        document.getElementById('tm').innerHTML = `<span class="lbl">Time</span>: ${d.time}`;
+        document.getElementById('ip').innerHTML = `<span class="lbl">IP</span>: ${d.ip}`;
+        document.getElementById('wf').innerHTML = `<span class="lbl">Wifi</span>: ${d.wifi}`;
+        
+        let statColor = d.status == "Connected" ? "clr-g" : "clr-r";
+        document.getElementById('st').innerHTML = `<span class="lbl">Status</span>: <span class="${statColor}">${d.status}</span>`;
+        
+        let dbm = parseInt(d.strength);
+        let strColor = "clr-r", strTxt = "Weak";
+        if(dbm > -60) { strColor = "clr-g"; strTxt = "Good"; }
+        else if(dbm > -80) { strColor = "clr-y"; strTxt = "Medium"; }
+        document.getElementById('sg').innerHTML = `<span class="lbl">Strength</span>: <span class="${strColor}">${d.strength} dBm (${strTxt})</span>`;
+        
+        let dmxColor = d.dmx == "Active" ? "clr-g" : (d.dmx == "No Signal" ? "clr-y" : "clr-r");
+        document.getElementById('dx').innerHTML = `<span class="lbl">DMX</span>: <span class="${dmxColor}">${d.dmx}</span>`;
+      }).catch(e => console.log(e));
+    }
+    setInterval(updateData, 1000);
+    
+    function req(url, msg) {
+      if(confirm(msg)) {
+        fetch(url, {method: 'POST'}).then(() => { 
+          if(url === '/reset') {
+            setTimeout(() => { window.location.href = "http://192.168.4.1"; }, 3500);
+          } else {
+            setTimeout(() => { location.reload(); }, 3500);
+          }
+        });
+      }
+    }
+  </script>
+</head>
+<body onload="updateData()">
+  <h1>ZZLIGHT PROJECT</h1>
+  <div class="box">
+    <div id="dt"><span class="lbl">Date</span>: Loading...</div>
+    <div id="tm"><span class="lbl">Time</span>: Loading...</div>
+    <div id="ip"><span class="lbl">IP</span>: Loading...</div>
+    <div id="wf"><span class="lbl">Wifi</span>: Loading...</div>
+    <div id="st"><span class="lbl">Status</span>: Loading...</div>
+    <div id="sg"><span class="lbl">Strength</span>: Loading...</div>
+    <div id="dx"><span class="lbl">DMX</span>: Loading...</div>
+  </div>
+  <div class="btn-container">
+    <button class="btn btn-red" onclick="req('/reset', 'Reset WiFi?')">WiFi Reset</button>
+    <button class="btn btn-orange" onclick="req('/reboot', 'Reboot Module?')">Module Reboot</button>
+  </div>
+  <div class="footer">created by @zzdree_</div>
+</body>
+</html>
+)rawliteral";
+
+
+// --- DMX ENGINE TASK (CORE 0) ---
+void DMXCoreTask(void *pvParameters) {
+  for (;;) {
+    digitalWrite(DMX_EN_PIN, HIGH);
+    
+    // --- CRITICAL SECTION: SWAP POINTER AMAN ---
+    if (frameReady) {
+      portENTER_CRITICAL(&mux); // Kunci Brankas!
+      uint8_t* temp = readBuffer;
+      readBuffer = writeBuffer;
+      writeBuffer = temp;
+      frameReady = false;
+      portEXIT_CRITICAL(&mux);  // Buka Brankas!
+    }
+    
+    // Break Signal (96000 baud)
+    Serial2.updateBaudRate(96000);
+    Serial2.write(0);
+    Serial2.flush();
+    
+    // Data DMX (250000 baud)
+    Serial2.updateBaudRate(250000);
+    Serial2.write(0); // Start Code
+    
+    // Blackout if Loss Signal > 10 detik
+    if (millis() - lastArtNetTime > 10000) {
+      for (int i = 0; i < 512; i++) Serial2.write(0);
+    } else {
+      Serial2.write(readBuffer, 512); // Membaca dari Buffer Aktif
+    }
+    Serial2.flush();
+    
+    vTaskDelay(pdMS_TO_TICKS(22)); // Pertahankan 22 FPS yang sudah stabil
+  }
+}
+
+// --- SETUP ---
+void setup() {
+  Serial.begin(115200);
+  
+  pinMode(DMX_EN_PIN, OUTPUT);
+  digitalWrite(DMX_EN_PIN, LOW);
+  Serial2.begin(250000, SERIAL_8N2, DMX_RX_PIN, DMX_TX_PIN);
+
+  lcd.init();
+  lcd.backlight();
+  lcd.clear();
+
+  // Bersihkan memori buffer saat booting awal
+  memset(bufferA, 0, 512);
+  memset(bufferB, 0, 512);
+
+  xTaskCreatePinnedToCore(DMXCoreTask, "DMX_T", 2048, NULL, 2, &DMXTask, 0);
+
+  prefs.begin("wifi_data", false);
+  ssid = prefs.getString("ssid", "");
+  pass = prefs.getString("pass", "");
+  isAdvanced = prefs.getBool("isAdv", false);
+  entUser = prefs.getString("entUser", "");
+  entPass = prefs.getString("entPass", "");
+
+  // Alur 1 & 2: Boot Screen -> Connecting Screen
+  changeScreen(S_BOOT);
+  changeScreen(S_CONNECTING);
+  
+  if (ssid == "") {
+    // Alur 3 -> 4: WiFi Not Connect -> AP Mode
+    changeScreen(S_WIFI_ERR);
+    startAP();
+  } else {
+    // Mencoba Konek (Bisa sukses ke Alur 7, atau gagal ke Alur 11)
+    connectWiFi();
+  }
+}
+
+// --- MAIN LOOP ---
+void loop() {
+  handleLCDAnimation();
+  server.handleClient();
+  
+  if (currentState == S_RUN) {
+    int packetSize = Udp.parsePacket();
+    if (packetSize) {
+      char packetBuffer[530];
+      Udp.read(packetBuffer, 530);
+      
+      // Art-Net Parsing dengan Cek Universe
+      if (strncmp(packetBuffer, "Art-Net\0", 8) == 0 && packetBuffer[9] == 0x50) {
+        
+        uint8_t incomingUniverse = packetBuffer[14]; // Ambil ID Universe dari Paket
+        
+        if (incomingUniverse == myUniverse) {
+          lastArtNetTime = millis();
+          int length = (packetBuffer[16] << 8) | packetBuffer[17];
+          if (length > 512) length = 512;
+          
+          // --- CRITICAL SECTION: TULIS DATA KE BUFFER ---
+          portENTER_CRITICAL(&mux);
+          
+          memset(writeBuffer, 0, 512); // Cuci bersih buffer sebelum ditulis (Hapus Ghost Data)
+          for (int i = 0; i < length; i++) {
+            writeBuffer[i] = packetBuffer[18 + i];
+          }
+          frameReady = true; // Angkat bendera sinyal
+          
+          portEXIT_CRITICAL(&mux);
+        }
+      }
+    }
+    
+    // Auto Reconnect / Disconnect Logic
+    if (WiFi.status() != WL_CONNECTED) {
+      if (wifiLostTime == 0) {
+        wifiLostTime = millis();
+        changeScreen(S_WIFI_DISCONN1); // Screen 10 (Reconnect <30s)
+      }
+      
+      if (millis() - wifiLostTime > 30000) {
+        // Screen 10 (Reboot >30s)
+        changeScreen(S_WIFI_DISCONN2);
+        prefs.clear();
+        ESP.restart(); // Otomatis mengulang alur ke Setup Mode AP
+      } else {
+        WiFi.reconnect();
+      }
+    } else {
+      if (wifiLostTime != 0) {
+        // Jika reconnect sukses <30s, kembali ke Run
+        changeScreen(S_CONNECTING);
+        changeScreen(S_MOD_CONN2);
+        changeScreen(S_RUN);
+        wifiLostTime = 0; 
+      }
+    }
+  }
+
+  // AP Mode: Deteksi jika HP konek ke hotspot
+  if (currentState == S_AP_MODE) {
+    int currentDevices = WiFi.softAPgetStationNum();
+    if (currentDevices > connectedDevices) {
+      changeScreen(S_CONNECTING); // Screen 2
+      changeScreen(S_DEV_CONN);   // Screen 5
+      changeScreen(S_AP_MODE);    // Kembali ke Screen 4
+    }
+    connectedDevices = currentDevices;
+  }
+}
+
+
+// --- WIFI & AP FUNCTIONS ---
+void startAP() {
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP("ARTNET-DMX");
+  connectedDevices = 0;
+  
+  setupAPServer();
+  server.begin();
+  changeScreen(S_AP_MODE); // Screen 4
+}
+
+void connectWiFi() {
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect();
+  delay(100);
+  
+  if (isAdvanced && entUser != "") {
+    WiFi.begin(ssid.c_str(), WPA2_AUTH_PEAP, entUser.c_str(), entUser.c_str(), entPass.c_str());
+  } else {
+    WiFi.begin(ssid.c_str(), pass.c_str());
+  }
+
+  unsigned long startT = millis();
+  while (WiFi.status() != WL_CONNECTED && millis() - startT < 10000) {
+    delay(500);
+  }
+
+  if (WiFi.status() == WL_CONNECTED) {
+    // Alur 7 -> 8: Module Connect 2 -> Run Mode
+    changeScreen(S_MOD_CONN2);
+    configTime(7 * 3600, 0, "pool.ntp.org");
+    MDNS.begin("zzlight");
+    Udp.begin(artNetPort);
+    
+    setupRunServer();
+    server.begin();
+    changeScreen(S_RUN);
+  } else {
+    // Alur 11 -> 4: WiFi Failed -> AP Mode
+    changeScreen(S_WIFI_FAIL);
+    startAP();
+  }
+}
+
+// --- WEBSERVER ROUTING ---
+void setupAPServer() {
+  server.on("/", HTTP_GET, []() {
+    server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    server.sendHeader("Pragma", "no-cache");
+    server.sendHeader("Expires", "-1");
+    server.send(200, "text/html", AP_HTML);
+  });
+
+  server.on("/scan", HTTP_GET, []() {
+    WiFi.scanDelete(); 
+    int n = WiFi.scanNetworks(false, true); 
+    String json = "[";
+    for (int i = 0; i < n; ++i) {
+      if (i > 0) json += ",";
+      int dbm = WiFi.RSSI(i);
+      int quality = (dbm <= -100) ? 0 : ((dbm >= -50) ? 100 : 2 * (dbm + 100));
+      bool secure = WiFi.encryptionType(i) != WIFI_AUTH_OPEN;
+      json += "{\"ssid\":\"" + WiFi.SSID(i) + "\",\"sec\":" + String(secure ? "true" : "false") + ",\"sig\":" + String(quality) + "}";
+    }
+    json += "]";
+    server.send(200, "application/json", json);
+  });
+  
+  server.on("/connect", HTTP_POST, []() {
+    ssid = server.arg("ssid");
+    pass = server.arg("pass");
+    isAdvanced = server.arg("isAdv") == "1";
+    entUser = server.arg("entUser");
+    entPass = server.arg("entPass");
+    
+    prefs.putString("ssid", ssid);
+    prefs.putString("pass", pass);
+    prefs.putBool("isAdv", isAdvanced);
+    prefs.putString("entUser", entUser);
+    prefs.putString("entPass", entPass);
+    
+    server.send(200, "text/html", SAVED_HTML);
+    
+    // Screen 6 -> Reboot
+    changeScreen(S_MOD_CONN1);
+    ESP.restart();
+  });
+}
+
+void setupRunServer() {
+  server.on("/", HTTP_GET, []() {
+    server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    server.sendHeader("Pragma", "no-cache");
+    server.sendHeader("Expires", "-1");
+    server.send(200, "text/html", RUN_HTML);
+  });
+
+  server.on("/status", HTTP_GET, []() {
+    struct tm ti;
+    String dateStr = "Loading...";
+    String timeStr = "Loading...";
+    if (getLocalTime(&ti, 50)) {
+      char dBuf[50], tBuf[20];
+      sprintf(dBuf, "%s, %02d %s %d", dayNames[ti.tm_wday].c_str(), ti.tm_mday, monthNames[ti.tm_mon].c_str(), ti.tm_year + 1900);
+      sprintf(tBuf, "%02d:%02d:%02d", ti.tm_hour, ti.tm_min, ti.tm_sec);
+      dateStr = String(dBuf);
+      timeStr = String(tBuf);
+    }
+
+    unsigned long dmxDelta = millis() - lastArtNetTime;
+    String dmxStat = "Loss Signal";
+    if (dmxDelta < 1000) dmxStat = "Active";
+    else if (dmxDelta < 10000) dmxStat = "No Signal";
+
+    String json = "{";
+    json += "\"date\":\"" + dateStr + "\",";
+    json += "\"time\":\"" + timeStr + "\",";
+    json += "\"ip\":\"" + WiFi.localIP().toString() + "\",";
+    json += "\"wifi\":\"" + WiFi.SSID() + "\",";
+    json += "\"status\":\"" + String(WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected") + "\",";
+    json += "\"strength\":\"" + String(WiFi.RSSI()) + "\",";
+    json += "\"dmx\":\"" + dmxStat + "\"";
+    json += "}";
+    
+    server.send(200, "application/json", json);
+  });
+
+  server.on("/reset", HTTP_POST, []() {
+    server.send(200, "text/plain", "OK");
+    prefs.clear();
+    
+    // Screen 9 -> Reboot
+    changeScreen(S_WIFI_RST);
+    ESP.restart();
+  });
+
+  server.on("/reboot", HTTP_POST, []() {
+    server.send(200, "text/plain", "OK");
+    delay(500);
+    ESP.restart();
+  });
+}
+
+// --- LCD CONTROLLER ---
+void changeScreen(ScreenState newState) {
+  // Hanya simpan state jika bukan state non-blocking
+  if(newState != S_WIFI_DISCONN1) {
+    currentState = newState;
+  }
+  lcd.clear();
+  
+  switch(newState) {
+    case S_BOOT: // Screen 1
+      for(int i=0; i<7; i++) { lcd.setCursor(5+i, 0); lcd.print("ZZLIGHT"[i]); delay(150); }
+      for(int i=0; i<7; i++) { lcd.setCursor(5+i, 1); lcd.print("PROJECT"[i]); delay(150); }
+      delay(900); // Penyeimbang agar total durasi sekitar 3 detik
+      break;
+      
+    case S_CONNECTING: // Screen 2
+      lcd.setCursor(0, 0); lcd.print("Connecting...   ");
+      lcd.setCursor(0, 1); lcd.print("                ");
+      delay(3000);
+      break;
+      
+    case S_WIFI_ERR: // Screen 3
+      lcd.setCursor(0, 0); lcd.print("WiFi Not Connect");
+      lcd.setCursor(0, 1); lcd.print("Connecting...   ");
+      delay(3000);
+      break;
+      
+    case S_AP_MODE: // Screen 4
+      lcd.setCursor(0, 0); lcd.print("ARTNET-DMX      ");
+      lcd.setCursor(0, 1); lcd.print("192.168.4.1     ");
+      break;
+      
+    case S_DEV_CONN: // Screen 5
+      lcd.setCursor(0, 0); lcd.print("Device Connect! ");
+      lcd.setCursor(0, 1); lcd.print("Loading...      ");
+      delay(3000);
+      break;
+      
+    case S_MOD_CONN1: // Screen 6
+      lcd.setCursor(0, 0); lcd.print("Module Connect! ");
+      lcd.setCursor(0, 1); lcd.print("Rebooting...    ");
+      delay(3000);
+      break;
+      
+    case S_MOD_CONN2: // Screen 7
+      lcd.setCursor(0, 0); lcd.print("Module Connect! ");
+      lcd.setCursor(0, 1); lcd.print("Loading...      ");
+      delay(3000);
+      break;
+      
+    case S_RUN: // Screen 8
+      animStep = 0;
+      lastAnimTime = millis();
+      lcd.setCursor(0, 0); lcd.print("ARTNET-DMX      ");
+      lcd.setCursor(0, 1); 
+      {
+        String ipStr = WiFi.localIP().toString();
+        // Spasi pengisi untuk menghilangkan karakter sisa (flicker-free)
+        while(ipStr.length() < 16) ipStr += " ";
+        lcd.print(ipStr);
+      }
+      break;
+      
+    case S_WIFI_RST: // Screen 9
+      lcd.setCursor(0, 0); lcd.print("WiFi Reset!     ");
+      lcd.setCursor(0, 1); lcd.print("Rebooting...    ");
+      delay(3000);
+      break;
+      
+    case S_WIFI_DISCONN1: // Screen 10 (Reconnect <30s)
+      lcd.setCursor(0, 0); lcd.print("WiFi Disconnect!");
+      lcd.setCursor(0, 1); lcd.print("Reconnecting... ");
+      break;
+      
+    case S_WIFI_DISCONN2: // Screen 10 (Reboot >30s)
+      lcd.setCursor(0, 0); lcd.print("WiFi Disconnect!");
+      lcd.setCursor(0, 1); lcd.print("Rebooting...    ");
+      delay(3000);
+      break;
+      
+    case S_WIFI_FAIL: // Screen 11
+      lcd.setCursor(0, 0); lcd.print("WiFi Failed!    ");
+      lcd.setCursor(0, 1); lcd.print("Wrong Password..");
+      delay(3000);
+      break;
+  }
+}
+
+// Animasi loop untuk S_RUN (6 Langkah yang Halus Tanpa Kedip)
+void handleLCDAnimation() {
+  if (currentState == S_RUN) {
+    if (millis() - lastAnimTime > 500) {
+      lastAnimTime = millis();
+      animStep++;
+      if (animStep > 5) animStep = 0;
+      
+      lcd.setCursor(10, 0); 
+      if (animStep == 0) {
+        lcd.print("      "); // Kosong (Langkah 1)
+      } else {
+        lcd.print(" "); 
+        for(int i=1; i<=animStep; i++) lcd.print(">");
+        for(int i=animStep+1; i<=5; i++) lcd.print(" ");
+      }
+    }
+  }
+}
