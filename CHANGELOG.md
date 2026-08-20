@@ -1,19 +1,38 @@
 # 📋 Changelog — ESP32 Art-Net to DMX512 Converter Module (ZZLIGHT PROJECT)
-Dokumentasi komprehensif riwayat perancangan dan evolusi arsitektur firmware modul konverter **Wireless Art-Net Node ke DMX512** berbasis **ESP32 DevKit V1 + MAX485 + I2C LCD 16x2 + Enclosure Box X4**.
+
+Dokumentasi komprehensif riwayat perancangan, pengembangan firmware, fabrikasi hardware, penyusunan aset visual terindeks, dan laporan penelitian formal modul konverter **Wireless Art-Net Node ke DMX512** berbasis **ESP32 DevKit V1 + MAX485 + I2C LCD 16x2 + Enclosure Box X4**.
 
 Format pencatatan mengikuti standar industri [*Keep a Changelog*](https://keepachangelog.com/id/1.0.0/) dan penomoran versi semantik [*Semantic Versioning (SemVer)*](https://semver.org/).
 
 ---
 
-## 🌟 [Final Release] — v5.0.0 (`firmware/artnet_dmx_final.ino`) — 2026-08
+## 🌟 [v5.2.0] — Final Academic & Production Release — 2026-08
+*Master Production Release: Formal Academic Research Report (`REPORT.pdf`), 58 Indexed Figures & Diagrams, 16:9 Master Result Banner, and Publication-Grade Documentation Suite.*
+
+### ✨ Added (Fitur & Aset Baru)
+- **Comprehensive Visual Asset Catalog & Figure Indexing Suite (58 Visuals):**
+  - **1 Master Live Setup Banner (`RESULT.png`):** Diformat dalam rasio sinematik **16:9 ($1024 \times 576\text{ px}$)** dengan sudut pandang lebar (*wide master shot*), menampilkan laptop **Acer Swift 3** utuh tanpa terpotong menjalankan QLC+, modul **Box X4** presisi dengan layar LCD 16x2 biru menyala di tutup atas dan soket XLR 3-pin perak di panel depan, serta 4 unit lampu **PAR LED 54 mata** yang menyala dengan warna: 🟣 **Ungu**, 🔴 **Merah**, 🟠 **Oranye**, dan 🟢 **Hijau** (**Gambar 1.1**).
+  - **22 Studio Catalog Product Images (`images/` — Gambar 2.1 s/d 2.22):** Seluruh alat, bahan, komponen sirkuit, perkabelan, instrumen solder/bor/multimeter, laptop host, dan beban uji panggung di-render dengan latar belakang putih bersih (*seamless pure white background* `#FFFFFF`), unslop, dan realistis.
+  - **5 Monochrome 300 DPI Engineering Schematics (`schematics/` — Gambar 3.1 s/d 3.5):** Diagram blok sistem, skematik wiring pinout detail, diagram waktu USITT DMX512-A, arsitektur FreeRTOS Dual-Core SMP, dan flowchart mesin status LCD 16x2.
+  - **30 Authentic Physical Fabrication Photos (`docs/` — Gambar 4.1 s/d 4.30):** Dokumentasi asli tahapan pembuatan mekanikal enclosure Box X4, pelubangan step drill, penyolderan rawboard, penataan soket, perakitan internal, dan pengujian live fixture panggung.
+- **Formal Academic Research Report (`REPORT.pdf`):**
+  - Disusun menggunakan arsitektur ReportLab dengan layout resmi Universitas Negeri Semarang (UNNES), Fakultas Teknik, Jurusan Teknik Elektro, Program Studi Teknik Komputer.
+  - Dilengkapi *running headers* & *running footers* berpenomoran halaman dinamis (*Halaman X dari Y* via `NumberedCanvas`), tipografi terstruktur, tabel spesifikasi BOM, dan penyisipan seluruh 58 visual dengan preservasi rasio aspek asli (*zero-distortion aspect ratio scaling*).
+- **Academic Citation & Research Traceability:**
+  - Integrasi metadata resmi peneliti: **Andreas Restuawanta Christwara (NIM: 5312422036)**.
+  - Tautan sesi riset kecerdasan buatan terverifikasi: [Google Gemini Research Session #9b15b21a9066dd07](https://gemini.google.com/app/9b15b21a9066dd07).
+
+---
+
+## 🌟 [v5.0.0] (`firmware/artnet_dmx_final.ino`) — 2026-08
 *Production-Ready Firmware with Dual-Core FreeRTOS SMP, Atomic Spinlock Double-Buffering, Full Captive Portal, 11-State LCD Machine, and Enclosure Hardware Integration.*
 
-### ✨ Added (Fitur Baru)
+### ✨ Added
 - **FreeRTOS Symmetric Multiprocessing (SMP) Architecture:**
   - `DMX_Task` diikat secara eksklusif ke **Core 0** dengan prioritas tertinggi (`configMAX_PRIORITIES - 1`), menjamin transmisi RS-485 berkecepatan 250 kbps (8N2) dengan *refresh rate* stabil 44 Hz tanpa jitter.
   - Core 1 menangani seluruh tumpukan jaringan (*WiFi UDP 6454*, *Captive Portal DNS*, *WebServer HTTP 80*, dan *NVS Storage*).
 - **Atomic Double Buffering (Ping-Pong Memory):**
-  - Alokasi memori independen `dmxBufferA[512]` dan `dmxBufferB[512]`.
+  - Alokasi memori independen `dmxBufferA[513]` dan `dmxBufferB[513]`.
   - Operasi pertukaran pointer aman menggunakan *spinlock critical section* atomik (`portENTER_CRITICAL(&dmxMux)` dan `portEXIT_CRITICAL(&dmxMux)`), mengeliminasi risiko *frame tearing* dan *data race*.
 - **11-State Machine Display LCD 16x2 I2C (PCF8574 Address `0x27`):**
   - **State 1 (Boot Screen):** Animasi *typing effect* `"ZZLIGHT PROJECT"` di baris 1 & 2 (durasi 3 detik).
@@ -33,7 +52,7 @@ Format pencatatan mengikuti standar industri [*Keep a Changelog*](https://keepac
 - **NVS (Non-Volatile Storage) Preferences:**
   - Migrasi penuh dari pustaka EEPROM legacy ke `Preferences.h` bawaan ESP32 untuk penyimpanan persisten SSID, Password, Universe, dan Konfigurasi Subnet.
 - **Fail-Safe & Safety Protections:**
-  - **Blackout Timeout (10 Detik):** Otomatis mengosongkan seluruh 512 slot DMX menjadi `0` jika laptop pengirim crash.
+  - **Blackout Timeout (10 Detik):** Otomatis mengosongkan seluruh 512 slot DMX menjadi `0` jika laptop pengirim crash atau tertutup.
   - **Watchdog Timer (WDT):** Mencegah *deadlock* sistem pada operasi socket jaringan.
 
 ---
@@ -60,7 +79,7 @@ Format pencatatan mengikuti standar industri [*Keep a Changelog*](https://keepac
 - Filter Sub-Net dan Universe pada verifikasi header biner paket ArtDmx (`OpCode 0x5000`).
 
 ### 🔧 Fixed
-- Memperbaiki presisi durasi gelombang *Break* (min. $88\,\mu	ext{s}$) dan *Mark After Break / MAB* (min. $8\,\mu	ext{s}$) menggunakan teknik *GPIO Bit-Banging + Serial2.flush()* sebelum transmisi byte 512 channel serial.
+- Memperbaiki presisi durasi gelombang *Break* (min. $88\,\mu\text{s}$) dan *Mark After Break / MAB* (min. $8\,\mu\text{s}$) menggunakan teknik *GPIO Bit-Banging + Serial2.flush()* sebelum transmisi byte 512 channel serial.
 
 ---
 
