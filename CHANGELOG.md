@@ -1,10 +1,10 @@
 # 📋 Changelog & Development Roadmap — ESP32 Art-Net to DMX512 Node (ZZLIGHT)
 
-Dokumentasi komprehensif riwayat perancangan, evolusi kode firmware (v1.0 s/d v4.0 Final), aset visual panggung terindeks, peta jalan pengembangan masa depan (*future roadmap*), serta panduan bagi komunitas maker, pengembang, dan kontributor (*forks & pull requests*).
+Dokumentasi komprehensif riwayat perancangan, evolusi kode firmware (v1.0 s/d v4.0 Final), aset visual panggung terindeks, peta jalan pengembangan **v5.0 (Community Edition)**, serta pesan hangat bagi komunitas maker, pengembang, dan kontributor (*forks & pull requests*).
 
 Format pencatatan mengikuti standar industri [*Keep a Changelog*](https://keepachangelog.com/id/1.0.0/) dan penomoran versi semantik [*Semantic Versioning (SemVer)*](https://semver.org/).
 
-> 💡 **Catatan Berkas:** Berkas `firmware/artnet_dmx_final.ino` merupakan versi resmi (*production-ready*) dari `firmware/artnet_dmx_v4.txt` yang siap dikompilasi langsung di Arduino IDE.
+> 💡 **Status Versi Saat Ini:** Versi **v4.0.0** (`firmware/artnet_dmx_final.ino`) adalah **versi final stabil (*production-ready*)** yang sudah teruji 100% di panggung fisik. Pengembangan versi resmi oleh pembuat asli dicukupkan sampai v4.0.0 ini. Namun, bagi siapa pun yang ingin **mengembangkan versi berikutnya (v5.0.0 dst.)**, pintu terbuka sangat lebar — *Monggo / Silakan dikembangkan dan di-fork sesuka hati!* 🎉
 
 ---
 
@@ -80,55 +80,47 @@ Format pencatatan mengikuti standar industri [*Keep a Changelog*](https://keepac
 - Pengujian komunikasi dasar paket UDP port 6454 menuju modul transceiver MAX485 pada channel 1–512.
 - Pengujian fisik pertama pada fixture lampu panggung PAR LED RGBW.
 
-### ⚠️ Limitations Identified (Catatan Evaluasi)
-- Model *single-threaded* menyebabkan kedipan (*flicker*) pada lampu panggung setiap kali terjadi fluktuasi latensi jaringan WiFi atau pemrosesan request HTTP.
-- Memerlukan arsitektur *dual-core* dan proteksi *memory buffer* untuk mencapai standar kehandalan tingkat produksi / panggung langsung.
-
 ---
 
-## 🔮 Roadmap & Ide Pengembangan Masa Depan (Future Roadmap)
+## 🔮 Roadmap v5.0 (Community Edition) — Ide untuk Versi Berikutnya
 
-Bagi siapa pun yang ingin mengembangkan proyek ini lebih jauh, berikut adalah daftar fitur dan peningkatan arsitektur yang sangat direkomendasikan untuk versi berikutnya:
+Bagi Anda yang ingin melanjutkan tongkat estafet pengembangan ke **v5.0.0**, berikut adalah beberapa ide fitur keren yang siap dieksekusi:
 
-1. 🌐 **Multi-Protocol Support (sACN / E1.31):** Streaming Architecture for Control Networks (E1.31 multicast) berdampingan dengan Art-Net 4.
-2. 🎛️ **Multi-Universe Hardware Outputs (2–4 Universes):** Menggunakan periferal UART0/UART1/RMT untuk 2–4 port XLR fisik independen (1024–2048 channel).
+1. 🌐 **Multi-Protocol Support (sACN / E1.31):** Menambahkan Streaming ACN (E1.31 multicast) berdampingan dengan Art-Net 4.
+2. 🎛️ **Multi-Universe Hardware Outputs (2–4 Universes):** Menghasilkan 2–4 port XLR fisik independen (1024–2048 channel) menggunakan periferal UART0/UART1/RMT ESP32.
 3. 🔄 **Bidirectional RDM (ANSI E1.20):** Diagnostik suhu fixture lampu panggung dan konfigurasi start address dari jarak jauh.
-4. ⚡ **Hardwired Ethernet (W5500 / LAN8720 PoE):** Jalur kabel RJ45 fisik bebas interferensi radio WiFi untuk panggung stadion besar.
-5. ☁️ **Over-The-Air (OTA) Web Firmware Update:** Pembaruan firmware drag-and-drop `.bin` file via web browser.
+4. ⚡ **Hardwired Ethernet (W5500 / LAN8720 PoE):** Port kabel RJ45 fisik anti-interferensi RF untuk panggung stadion besar.
+5. ☁️ **Over-The-Air (OTA) Web Firmware Update:** Pembaruan firmware drag-and-drop file `.bin` via browser.
 6. 🔍 **Auto-Discovery Engine (ArtPoll & ArtPollReply):** Auto-deteksi nama node di konsol lighting (*grandMA3, Avolites, Chamsys*).
 7. 📟 **OLED SSD1306 & NeoPixel RGB Status:** Tampilan visual bar-graph channel grafis dan cincin status RGB yang dinamis.
 8. 💾 **Standalone DMX Scene Recorder & Playback:** Perekam adegan panggung ke Flash/MicroSD tanpa butuh laptop menyala.
 
 ---
 
-## 💬 Pesan Hangat untuk Pengguna, Pembuat (Makers), & Kontributor (Forks)
+## 💬 Pesan Hangat untuk Pengguna, Pembuat (Makers), & Forkers (Pengembang v5)
 
 > Halo rekan-rekan sesama *developer*, *lighting designer*, teknisi panggung, mahasiswa, dan komunitas *DIY maker* di mana pun Anda berada! 👋✨
 
-Proyek **ESP32 Wireless Art-Net to DMX512 Node (ZZLIGHT)** ini saya dedikasikan dan rilis sepenuhnya sebagai **perangkat lunak dan desain perangkat keras Open Source (MIT License)**. Proyek ini berawal dari kebutuhan nyata di lapangan akan modul konverter DMX nirkabel yang **andal, berkecepatan tinggi, bebas jitter (*zero-jitter*), namun dapat dirakit sendiri dengan biaya sangat terjangkau ($<\$10 / <\text{Rp }150.000$)**.
+Proyek **ESP32 Wireless Art-Net to DMX512 Node (ZZLIGHT)** ini saya rilis sepenuhnya sebagai **perangkat lunak dan desain perangkat keras Open Source (MIT License)**. Bagi saya pribadi, pengembangan inti modul ini telah **tuntas sampai versi v4.0.0** dan sudah terbukti sangat stabil serta siap pakai di panggung.
 
-### 🤝 Untuk Anda yang Ingin Merakit Sendiri (*DIY Builders*):
-* **Silakan rakit dan gunakan secara bebas!** Proyek ini telah dilengkapi daftar komponen lengkap (22 item katalog), skematik wiring presisi, dan panduan foto langkah demi langkah.
-* **Tips Perakitan Penting:**
-  1. Pastikan jalur suplai daya **5V** ke ESP32 dan MAX485 menggunakan kabel tembaga berkualitas agar tegangan tidak drop saat transmisi WiFi berdaya penuh.
-  2. Tambahkan kapasitor *decoupling* keramik ($100\,\text{nF}$) dekat pin VCC-GND MAX485 untuk menyaring *noise* frekuensi tinggi.
-  3. Untuk kabel DMX panggung yang sangat panjang (>50 meter), pasang resistor terminasi $120\,\Omega$ ($0.25\text{W}$) di antara Pin 2 ($D-$) dan Pin 3 ($D+$) pada fixture lampu terakhir untuk mencegah pantulan sinyal (*signal reflection*).
+### 🚀 Monggo Banget untuk Fork & Kembangkan v5.0!
+Jika Anda memiliki ide untuk menambahkan fitur baru, mendesain custom PCB KiCad SMD, membuat versi multi-universe, atau menambahkan protokol sACN E1.31 untuk melahirkan **Versi 5 (v5.0.0)**:
+* **Silakan banget (*Monggo*) di-fork, dimodifikasi, dan dikembangkan sesuka hati!**
+* Repositori ini bebas Anda jadikan basis riset skripsi, produk komersial, maupun perlengkapan panggung rental Anda sendiri.
+* Kami sangat senang jika Anda membagikan kembali hasil inovasi Anda via **Pull Request** atau *showcase* di GitHub kami ([`@zzdree`](https://github.com/zzdree)).
 
-### 🍴 Untuk Anda yang Ingin Memodifikasi atau Mem-Fork (*Forkers & Modders*):
-* **Anda sangat dipersilakan untuk mem-fork repositori ini!** Buatlah inovasi baru: ubah desain PCB ke custom SMD PCB KiCad, tambahkan layar OLED, integrasikan protokol sACN E1.31, atau buatkan versi multi-universe.
-* **Etika Open-Source:** Kami sangat menghargai jika Anda tetap mencantumkan nama pembuat asli (*credit attribution*) dan membagikan kembali perbaikan atau fitur baru Anda ke komunitas!
-
-### 🚀 Untuk Anda yang Ingin Berkontribusi (*Contributors*):
-* Temukan bug atau punya ide optimasi? Silakan buka **Issue** atau kirimkan **Pull Request (PR)** di repositori GitHub kami ([`@zzdree`](https://github.com/zzdree)).
-* Kami sangat terbuka terhadap masukan, dokumentasi terjemahan bahasa lain, perbaikan timing serial, atau penambahan fitur baru di roadmap di atas.
+### 🛠️ Tips Penting bagi yang Merakit Sendiri (*DIY Builders*):
+1. **Suplai Daya 5V:** Gunakan kabel data tembaga tebal dan adaptor berkualitas minimal 1A–2A agar radio WiFi ESP32 tidak drop saat mengirim paket data intensif.
+2. **Kapasitor Decoupling:** Sangat disarankan menyolder kapasitor keramik $100\,\text{nF}$ tepat di pin VCC-GND modul MAX485 untuk meredam noise frekuensi tinggi.
+3. **Resistor Terminasi $120\,\Omega$:** Jika kabel DMX panggung Anda panjang (>30–50 meter), pasang resistor $120\,\Omega$ ($0.25\text{W}$) pada soket XLR lampu paling ujung untuk mencegah pantulan sinyal (*signal reflection*).
 
 ---
 
 <div align="center">
-  <b>⭐ Jangan lupa berikan bintang (Star) pada repositori ini jika bermanfaat bagi pertunjukan atau proyek Anda! ⭐</b><br/>
-  <i>Happy Making, Happy Lighting, and Keep Rocking the Stage! 💡🎛️🚀</i>
+  <b>⭐ Jika proyek ini bermanfaat untuk panggung atau penelitian Anda, jangan lupa tinggalkan Star di GitHub! ⭐</b><br/>
+  <i>Happy Making, Happy Coding, and Let the Lights Shine Bright! 💡🎛️🔥</i>
   <br/><br/>
-  <b>Salam hangat,</b><br/>
+  <b>Salam hangat dari Semarang,</b><br/>
   <b>Andreas Restuawanta Christwara</b> (<a href="https://github.com/zzdree">@zzdree</a>)<br/>
   <i>Teknik Komputer — Universitas Negeri Semarang (UNNES)</i>
 </div>

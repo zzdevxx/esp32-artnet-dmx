@@ -256,9 +256,17 @@ void DMX_Task(void *pvParameters) {
 
 The node accepts standard **Art-Net 4 DMX packets (OpCode `0x5000`) on UDP Port 6454** from any lighting console:
 
-* **[QLC+](https://www.qlcplus.org/):** Go to *Inputs/Outputs* $ightarrow$ Select *ArtNet* output plugin $ightarrow$ Enter Node IP or Broadcast `255.255.255.255`.
-* **[grandMA3 onPC](https://www.malighting.com/):** Go to *Menu* $ightarrow$ *Network* $ightarrow$ *DMX Protocols* $ightarrow$ *Art-Net* (Enabled).
-* **[Resolume Arena](https://resolume.com/):** Go to *Preferences* $ightarrow$ *DMX* $ightarrow$ Add Lumiverse $ightarrow$ Target Node IP.
+* **[QLC+](https://www.qlcplus.org/):** Go to *Inputs/Outputs* $
+ightarrow$ Select *ArtNet* output plugin $
+ightarrow$ Enter Node IP or Broadcast `255.255.255.255`.
+* **[grandMA3 onPC](https://www.malighting.com/):** Go to *Menu* $
+ightarrow$ *Network* $
+ightarrow$ *DMX Protocols* $
+ightarrow$ *Art-Net* (Enabled).
+* **[Resolume Arena](https://resolume.com/):** Go to *Preferences* $
+ightarrow$ *DMX* $
+ightarrow$ Add Lumiverse $
+ightarrow$ Target Node IP.
 * **[TouchDesigner](https://derivative.ca/):** Use `DMX Out CHOP` in Art-Net mode.
 * **[ZZLUXORA](file:///C:/ANDREAS/esp32_artnet_dmx):** Automated audio-reactive AI lighting control engine.
 
@@ -273,6 +281,29 @@ The node accepts standard **Art-Net 4 DMX packets (OpCode `0x5000`) on UDP Port 
 | **WiFi UDP Latency** | $< 20\text{ ms}$ | **$1.8 - 4.2\text{ ms}$ (30m range)** | 🌟 Pass |
 | **Fail-Safe Blackout** | $10\text{ seconds}$ | **10.0s Auto Blackout Trigger** | 🌟 Pass |
 | **Current Consumption**| $< 500\text{ mA}$ | **$180\text{ mA}$ @ 5V DC** | 🌟 Pass |
+
+---
+
+## 🔮 Roadmap v5.0 (Community Edition) & Invitation to Fork
+
+> 💡 **Project Status:** This project is officially finalized and stable at **v4.0.0 (Production-Ready)**. For anyone wanting to take this project further and build **v5.0.0**, you are warmly invited to fork, experiment, and contribute! (*Monggo dikembangkan sesuka hati!*) 🎉
+
+Recommended features for v5:
+1. 🌐 **sACN (ANSI E1.31) Protocol Support** alongside Art-Net 4.
+2. 🎛️ **Multi-Universe Outputs (2–4 XLR Ports)** using ESP32 UART/RMT peripherals.
+3. 🔄 **Bidirectional RDM (ANSI E1.20)** for remote fixture configuration and sensor telemetry.
+4. ⚡ **Hardwired PoE Ethernet (W5500 / LAN8720)** for stadium/arena setups.
+5. ☁️ **Web OTA Firmware Update (Drag & Drop .bin)**.
+6. 🔍 **ArtPoll & ArtPollReply Auto-Discovery** for seamless grandMA3 / Avolites integration.
+7. 📟 **OLED SSD1306 Graphic Display & NeoPixel RGB Status Indicators**.
+8. 💾 **Standalone DMX Scene Recorder & Playback** without needing a PC.
+
+---
+
+## 💬 Message to Makers & Forkers
+
+* **Feel free to DIY build this node:** All schematics, BOM, and step-by-step photos are provided under the open-source MIT license.
+* **Feel free to fork & create v5:** Build custom KiCad SMD PCBs, 3D printed enclosures, or multi-port nodes. We'd love to see your creations!
 
 ---
 
