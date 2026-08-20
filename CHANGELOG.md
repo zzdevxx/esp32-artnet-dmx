@@ -4,7 +4,7 @@ Dokumentasi komprehensif riwayat perancangan, evolusi kode firmware (v1.0 s/d v4
 
 Format pencatatan mengikuti standar industri [*Keep a Changelog*](https://keepachangelog.com/id/1.0.0/) dan penomoran versi semantik [*Semantic Versioning (SemVer)*](https://semver.org/).
 
-> 💡 **Status Versi Saat Ini:** Versi **v4.0.0** (`firmware/artnet_dmx_final.ino`) adalah **versi final stabil (*production-ready*)** yang sudah teruji 100% di panggung fisik. Pengembangan versi resmi oleh pembuat asli dicukupkan sampai v4.0.0 ini. Namun, bagi siapa pun yang ingin **mengembangkan versi berikutnya (v5.0.0 dst.)**, pintu terbuka sangat lebar — *Monggo / Silakan dikembangkan dan di-fork sesuka hati!* 🎉
+> 💡 **Status Versi Saat Ini:** Versi **v4.0.0** (`firmware/artnet_dmx_final.ino`) adalah **versi final stabil (*production-ready*)** yang sudah teruji 100% di panggung fisik. Pengembangan versi resmi oleh pembuat asli dicukupkan sampai v4.0.0 ini. Namun, bagi siapa pun yang ingin **mengembangkan versi berikutnya (v5.0.0 dst.)**, pintu terbuka sangat lebar — *Silakan dikembangkan dan di-fork sesuka hati!* 🎉
 
 ---
 
@@ -103,9 +103,9 @@ Bagi Anda yang ingin melanjutkan tongkat estafet pengembangan ke **v5.0.0**, ber
 
 Proyek **ESP32 Wireless Art-Net to DMX512 Node (ZZLIGHT)** ini saya rilis sepenuhnya sebagai **perangkat lunak dan desain perangkat keras Open Source (MIT License)**. Bagi saya pribadi, pengembangan inti modul ini telah **tuntas sampai versi v4.0.0** dan sudah terbukti sangat stabil serta siap pakai di panggung.
 
-### 🚀 Monggo Banget untuk Fork & Kembangkan v5.0!
+### 🚀 Silakan Banget untuk Fork & Kembangkan v5.0!
 Jika Anda memiliki ide untuk menambahkan fitur baru, mendesain custom PCB KiCad SMD, membuat versi multi-universe, atau menambahkan protokol sACN E1.31 untuk melahirkan **Versi 5 (v5.0.0)**:
-* **Silakan banget (*Monggo*) di-fork, dimodifikasi, dan dikembangkan sesuka hati!**
+* **Silakan banget  di-fork, dimodifikasi, dan dikembangkan sesuka hati!**
 * Repositori ini bebas Anda jadikan basis riset skripsi, produk komersial, maupun perlengkapan panggung rental Anda sendiri.
 * Kami sangat senang jika Anda membagikan kembali hasil inovasi Anda via **Pull Request** atau *showcase* di GitHub kami ([`@zzdree`](https://github.com/zzdree)).
 

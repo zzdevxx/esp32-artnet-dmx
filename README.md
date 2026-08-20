@@ -286,7 +286,7 @@ ightarrow$ Target Node IP.
 
 ## 🔮 Roadmap v5.0 (Community Edition) & Invitation to Fork
 
-> 💡 **Project Status:** This project is officially finalized and stable at **v4.0.0 (Production-Ready)**. For anyone wanting to take this project further and build **v5.0.0**, you are warmly invited to fork, experiment, and contribute! (*Monggo dikembangkan sesuka hati!*) 🎉
+> 💡 **Project Status:** This project is officially finalized and stable at **v4.0.0 (Production-Ready)**. For anyone wanting to take this project further and build **v5.0.0**, you are warmly invited to fork, experiment, and contribute! (*Silakan dikembangkan sesuka hati!*) 🎉
 
 Recommended features for v5:
 1. 🌐 **sACN (ANSI E1.31) Protocol Support** alongside Art-Net 4.
