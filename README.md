@@ -27,6 +27,8 @@
 - [🌐 WiFi Setup via Captive Portal](#-wifi-setup-via-captive-portal)
 - [🎛️ Universal Software Compatibility](#️-universal-software-compatibility)
 - [📊 Test Results & Performance](#-test-results--performance)
+- [🔮 Roadmap v5.0 (Community Edition)](#-roadmap-v50-community-edition--invitation-to-fork)
+- [💬 Message to Makers & Forkers](#-message-to-makers--forkers)
 - [📜 License & Credits](#-license--credits)
 
 ---
@@ -51,7 +53,7 @@
 
 ## 🛒 Hardware & Bill of Materials (BOM)
 
-Here is everything you need to build this module (approx. total cost: $<\$10 / <	ext{Rp }150.000$):
+Total estimated cost to build this module is under **\$10 / Rp 150.000**. Here are all 22 parts and tools:
 
 | No | Component / Tool | Image Index | Specification & Details | Purpose |
 |:--:|:---|:---:|:---|:---|
@@ -256,17 +258,9 @@ void DMX_Task(void *pvParameters) {
 
 The node accepts standard **Art-Net 4 DMX packets (OpCode `0x5000`) on UDP Port 6454** from any lighting console:
 
-* **[QLC+](https://www.qlcplus.org/):** Go to *Inputs/Outputs* $
-ightarrow$ Select *ArtNet* output plugin $
-ightarrow$ Enter Node IP or Broadcast `255.255.255.255`.
-* **[grandMA3 onPC](https://www.malighting.com/):** Go to *Menu* $
-ightarrow$ *Network* $
-ightarrow$ *DMX Protocols* $
-ightarrow$ *Art-Net* (Enabled).
-* **[Resolume Arena](https://resolume.com/):** Go to *Preferences* $
-ightarrow$ *DMX* $
-ightarrow$ Add Lumiverse $
-ightarrow$ Target Node IP.
+* **[QLC+](https://www.qlcplus.org/):** Go to *Inputs/Outputs* ➔ Select *ArtNet* output plugin ➔ Enter Node IP or Broadcast `255.255.255.255`.
+* **[grandMA3 onPC](https://www.malighting.com/):** Go to *Menu* ➔ *Network* ➔ *DMX Protocols* ➔ *Art-Net* (Enabled).
+* **[Resolume Arena](https://resolume.com/):** Go to *Preferences* ➔ *DMX* ➔ Add Lumiverse ➔ Target Node IP.
 * **[TouchDesigner](https://derivative.ca/):** Use `DMX Out CHOP` in Art-Net mode.
 * **[ZZLUXORA](file:///C:/ANDREAS/esp32_artnet_dmx):** Automated audio-reactive AI lighting control engine.
 
