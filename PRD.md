@@ -9,7 +9,7 @@
 ## 📌 Metadata Dokumen
 - **Nama Produk:** ZZLIGHT Art-Net to DMX512 Converter Module
 - **Kode Proyek:** ZZLIGHT-HW-01
-- **Versi Produk:** v5.2.0 (Final Academic & Production Release)
+- **Versi Produk:** v4.0.0 (Final Production Release)
 - **Target Board / Core:** ESP32 DevKit V1 (ESP-WROOM-32 30-Pin) / Arduino ESP32 Core v3.x
 - **Peneliti / Penulis:** Andreas Restuawanta Christwara (`NIM: 5312422036`)
 - **Dosen Pembimbing:** Khoirudin Fathoni, S.T., M.T. (`NIP: 19900929292015041001`)

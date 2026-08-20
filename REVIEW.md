@@ -15,7 +15,7 @@
 | **[`PRD.md`](file:///C:/ANDREAS/esp32_artnet_dmx/PRD.md)** | Dokumen PRD (14.2 KB) | Dokumen spesifikasi teknis resmi, kontrak antarmuka hardware/software, dan kriteria penerimaan. |
 | **[`README.md`](file:///C:/ANDREAS/esp32_artnet_dmx/README.md)** | Panduan (14.5 KB) | Tutorial komprehensif 8 bab dengan indeks gambar terstruktur dan panduan pengoperasian. |
 | **[`REPORT.pdf`](file:///C:/ANDREAS/esp32_artnet_dmx/REPORT.pdf)** | Laporan PDF (19.8 MB) | Laporan penelitian akademik formal UNNES dengan 58 visual, running header-footer, dan evaluasi performa. |
-| **[`CHANGELOG.md`](file:///C:/ANDREAS/esp32_artnet_dmx/CHANGELOG.md)** | Log Riwayat (6.8 KB) | Catatan evolusi arsitektur firmware dari PoC v1.0 hingga rilis stabil Final v5.2.0. |
+| **[`CHANGELOG.md`](file:///C:/ANDREAS/esp32_artnet_dmx/CHANGELOG.md)** | Log Riwayat (6.8 KB) | Catatan evolusi arsitektur firmware dari PoC v1.0 hingga rilis stabil Final v4.0 (Final).0. |
 | **[`RESULT.png`](file:///C:/ANDREAS/esp32_artnet_dmx/RESULT.png)** | Banner 16:9 (963.4 KB) | Banner live setup (Acer Swift 3, Box X4 presisi, dan 4 PAR LED ungu, merah, oranye, hijau). |
 | **[`images/`](file:///C:/ANDREAS/esp32_artnet_dmx/images/)** | Katalog (22 Gambar) | 22 berkas gambar alat dan bahan berlatar belakang putih bersih murni (`#FFFFFF`). |
 | **[`schematics/`](file:///C:/ANDREAS/esp32_artnet_dmx/schematics/)** | Diagram (5 Berkas) | Diagram blok sistem, skematik wiring, timing DMX512-A, arsitektur FreeRTOS, dan flowchart LCD (300 DPI). |
@@ -24,9 +24,9 @@
 
 ---
 
-## 2. 🔬 Evaluasi Komparatif Firmware (v1.0 s/d Final v5.2)
+## 2. 🔬 Evaluasi Komparatif Firmware (v1.0 s/d Final v4.0 (Final))
 
-| Parameter Arsitektur | Firmware v1.0 (PoC) | Firmware v2.0 | Firmware v3.0 | Firmware Final (v5.2) | Evaluasi Teknik |
+| Parameter Arsitektur | Firmware v1.0 (PoC) | Firmware v2.0 | Firmware v3.0 | Firmware Final (v4.0 (Final)) | Evaluasi Teknik |
 |:---|:---:|:---:|:---:|:---:|:---|
 | **Model Multithreading** | Monolitik (1 Thread) | Dual-Core Unsynchronized | Dual-Core Sync | **FreeRTOS SMP Pin-to-Core** | **Grade A+**: Isolasi Core 0 menjamin zero-jitter 44.1 Hz tanpa terganggu beban jaringan. |
 | **Proteksi Memori DMX** | Single Buffer Global | Single Buffer Global | Double Buffer Mutex | **Double Buffer + Spinlock** | **Grade A+**: Mencegah kondisi balapan (*data race*) dan robekan frame (*frame tearing*). |

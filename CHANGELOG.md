@@ -1,33 +1,19 @@
 # 📋 Changelog & Development Roadmap — ESP32 Art-Net to DMX512 Node (ZZLIGHT)
 
-Dokumentasi komprehensif riwayat perancangan, evolusi kode firmware (v1.0 s/d Final v5.2), aset visual panggung terindeks, peta jalan pengembangan masa depan (*future roadmap*), serta panduan bagi komunitas maker, pengembang, dan kontributor (*forks & pull requests*).
+Dokumentasi komprehensif riwayat perancangan, evolusi kode firmware (v1.0 s/d v4.0 Final), aset visual panggung terindeks, peta jalan pengembangan masa depan (*future roadmap*), serta panduan bagi komunitas maker, pengembang, dan kontributor (*forks & pull requests*).
 
 Format pencatatan mengikuti standar industri [*Keep a Changelog*](https://keepachangelog.com/id/1.0.0/) dan penomoran versi semantik [*Semantic Versioning (SemVer)*](https://semver.org/).
 
----
-
-## 🌟 [v5.2.0] — Final Production & Open-Source Release — 2026-08
-*Master Production Release: Integrasi Aset Visual Lengkap (58 Visual), Modernisasi Open-Source, dan Laporan Riset Formal (`REPORT.pdf`).*
-
-### ✨ Added (Fitur & Dokumentasi Baru)
-- **Visual Asset & Engineering Indexing Suite (58 Visual):**
-  - **1 Master Live Setup Banner (`RESULT.png`):** Format 16:9 ($1024 \times 576\text{ px}$) sudut lebar tanpa cropping pada laptop Acer Swift 3, modul Box X4 presisi (LCD 16x2 biru & XLR 3-pin perak), dan 4 fixture PAR LED 54 mata menyala: 🟣 **Ungu**, 🔴 **Merah**, 🟠 **Oranye**, dan 🟢 **Hijau** (**Gambar 1.1**).
-  - **22 Studio Catalog Product Images (`images/` — Gambar 2.1 s/d 2.22):** Seluruh alat, bahan sirkuit, perkabelan, laptop host, lampu panggung, solder, dan instrumen bor/potong berlatar belakang putih bersih murni (`#FFFFFF`).
-  - **5 Monochrome 300 DPI Engineering Schematics (`schematics/` — Gambar 3.1 s/d 3.5):** Diagram blok sistem, skematik wiring pinout detail, diagram waktu USITT DMX512-A, arsitektur FreeRTOS Dual-Core SMP, dan flowchart mesin status LCD 16x2.
-  - **30 Authentic Physical Fabrication Photos (`docs/` — Gambar 4.1 s/d 4.30):** Dokumentasi autentik tahapan pengeboran step drill box X4, penyolderan rawboard, penataan soket sasis XLR, perakitan internal, dan uji coba fixture panggung live.
-- **Formal Technical & Academic Report (`REPORT.pdf`):**
-  - Dokumen laporan riset teknis 19.8 MB dengan layout resmi UNNES, running header-footer berpenomoran dinamis (*Halaman X dari Y* via `NumberedCanvas`), dan preservasi skala gambar asli tanpa distorsi rasio.
-- **Modern Open-Source README:**
-  - Transformasi penuh pada [`README.md`](file:///C:/ANDREAS/esp32_artnet_dmx/README.md) menjadi *showcase* open-source modern kelas dunia (bergaya WLED/ESPHome/QLC+) dengan navigasi interaktif, tabel BOM, galeri visual, panduan flashing Arduino IDE, dan matriks kompatibilitas software pencahayaan universal.
+> 💡 **Catatan Berkas:** Berkas `firmware/artnet_dmx_final.ino` merupakan versi resmi (*production-ready*) dari `firmware/artnet_dmx_v4.txt` yang siap dikompilasi langsung di Arduino IDE.
 
 ---
 
-## 🌟 [v5.0.0] (`firmware/artnet_dmx_final.ino`) — Production Firmware Release — 2026-08
-*Firmware Produksi Utama: Dual-Core FreeRTOS SMP, Atomic Spinlock Double-Buffering, Full Captive Portal, 11-State Machine LCD, dan Fail-Safe Blackout 10 Detik.*
+## 🌟 [v4.0.0] — Final Production Release (`firmware/artnet_dmx_final.ino` & `v4.txt`) — 2026-08
+*Master Production Release: Dual-Core FreeRTOS SMP, Atomic Spinlock Double-Buffering, Full Captive Portal DNS Hijacking, 11-State Machine LCD, Fail-Safe Blackout 10 Detik, dan 58 Aset Visual Terindeks.*
 
-### ✨ Added (Fitur Firmware)
+### ✨ Added (Fitur Firmware & Dokumentasi)
 - **FreeRTOS Symmetric Multiprocessing (SMP) Architecture:**
-  - Task `DMXLoop` diikat ke **Core 0** (`xTaskCreatePinnedToCore`) dengan prioritas tertinggi (`configMAX_PRIORITIES - 1`), menghasilkan sinyal fisik DMX512-A (250 kbps, 8N2) secara deterministik pada *refresh rate* stabil **44.1 Hz** dengan *zero-jitter* ($<0.05\,\mu\text{s}$).
+  - Task `DMXLoop` diikat secara eksklusif ke **Core 0** (`xTaskCreatePinnedToCore`) dengan prioritas tertinggi (`configMAX_PRIORITIES - 1`), menghasilkan sinyal fisik DMX512-A (250 kbps, 8N2) secara deterministik pada *refresh rate* stabil **44.1 Hz** dengan *zero-jitter* ($<0.05\,\mu\text{s}$).
   - **Core 1** menangani seluruh tumpukan jaringan (*WiFi UDP 6454*, *Captive Portal DNS*, *WebServer HTTP 80*, *Client-Side Clock*, dan *NVS Storage*).
 - **Atomic Double Buffering (Ping-Pong Memory):**
   - Alokasi memori independen `bufferA[512]` dan `bufferB[512]`.
@@ -50,19 +36,12 @@ Format pencatatan mengikuti standar industri [*Keep a Changelog*](https://keepac
   - Migrasi penuh dari pustaka EEPROM legacy ke `Preferences.h` bawaan ESP32 untuk penyimpanan persisten SSID, Password, dan Art-Net Universe.
 - **Fail-Safe & Safety Protections:**
   - **Blackout Safety Timeout (10 Detik):** Pelacakan `lastArtNetTime` otomatis mengosongkan seluruh 512 slot DMX menjadi nilai `0` jika software pengendali di laptop mati/terputus, mencegah panas berlebih pada fixture.
-
----
-
-## 🔄 [v4.0.0] (`firmware/artnet_dmx_v4.txt`) — Captive Portal & Web UI — 2026-07
-*Custom Captive Portal DNS Hijacking & Web UI Modernization.*
-
-### ✨ Added
-- Server DNS lokal pada port 53 untuk pengalihan otomatis (*Captive Portal*) gawai mobile ke portal setup tanpa perlu mengetikkan IP manual di browser.
-- Antarmuka web modern responsif mobile dengan tombol *Scan WiFi*, pemilihan dropdown SSID otomatis, dan input universe dinamis.
-- Mekanisme sinkronisasi waktu dan status modul via JavaScript *Client-Side Clock*.
-
-### ⚡ Changed
-- Mengoptimalkan buffer transmisi I2C untuk mengurangi beban komunikasi display LCD 16x2.
+- **Suite Visual Terindeks Lengkap (58 Visual):**
+  - 1 Master Result Banner 16:9 (`RESULT.png` — Gambar 1.1).
+  - 22 Gambar Katalog Alat dan Bahan Putih Bersih (`images/` — Gambar 2.1 s/d 2.22).
+  - 5 Skematik dan Diagram Arsitektur 300 DPI (`schematics/` — Gambar 3.1 s/d 3.5).
+  - 30 Foto Fabrikasi Fisik Autentik (`docs/` — Gambar 4.1 s/d 4.30).
+  - Laporan Riset Formal Komprehensif (`REPORT.pdf`).
 
 ---
 
@@ -111,29 +90,14 @@ Format pencatatan mengikuti standar industri [*Keep a Changelog*](https://keepac
 
 Bagi siapa pun yang ingin mengembangkan proyek ini lebih jauh, berikut adalah daftar fitur dan peningkatan arsitektur yang sangat direkomendasikan untuk versi berikutnya:
 
-### 1. 🌐 Dukungan Multi-Protokol (sACN / E1.31)
-* Menambahkan dukungan protokol **sACN (Streaming Architecture for Control Networks - ANSI E1.31)** dengan fitur *multicast* (Universe 1-63999) dan *priority handling* berdampingan dengan Art-Net 4.
-
-### 2. 🎛️ Multi-Universe Hardware Outputs (2 s/d 4 Universe)
-* Memanfaatkan periferal perangkat keras ESP32 lainnya (seperti **UART1 / UART0** atau **RMT / Remote Control Peripheral**) untuk menghasilkan **2 hingga 4 Port XLR DMX512 fisik independen** dari satu modul ESP32 tunggal (1024–2048 channel).
-
-### 3. 🔄 Komunikasi Dua Arah RDM (Remote Device Management - ANSI E1.20)
-* Mengimplementasikan protokol **RDM** pada bus RS-485 untuk membaca data diagnostik dari lampu panggung (suhu fixture, jam kerja lampu, voltase) dan mengubah alamat DMX (*start address*) lampu dari jarak jauh tanpa perlu memanjat rigging truss panggung.
-
-### 4. ⚡ Dukungan Port Ethernet Hardwired (W5500 / LAN8720 PoE)
-* Menyediakan opsi modul **Ethernet SPI W5500** atau **RMII LAN8720** dengan dukungan *Power over Ethernet (PoE 802.3af)* untuk instalasi panggung festival/stasioner besar yang bebas dari interferensi gelombang radio WiFi.
-
-### 5. ☁️ Over-The-Air (OTA) Web Firmware Update
-* Menambahkan fitur pembaruan firmware langsung melalui antarmuka web (*Drag-and-Drop `.bin` File Upload*) sehingga teknisi panggung dapat memperbarui fitur modul tanpa perlu membuka baut box atau mencolokkan kabel USB ke PC.
-
-### 6. 🔍 Respon ArtPoll & ArtPollReply (Auto-Discovery Engine)
-* Menambahkan parser biner untuk paket `ArtPoll` (`OpCode 0x2000`) dan membalas dengan `ArtPollReply` (`OpCode 0x2100`), sehingga software konsol profesional (seperti *grandMA3, Avolites Titan, Chamsys MagicQ*) dapat mendeteksi nama node `"ZZLIGHT Node"` dan status port secara otomatis di jaringan panggung.
-
-### 7. 📟 Antarmuka Layar OLED SSD1306 / NeoPixel RGB Status
-* Menyediakan opsi firmware untuk layar grafis **OLED 0.96-inch I2C (SSD1306)** atau cincin **NeoPixel WS2812B RGB** untuk visualisasi level channel DMX bar-graph grafis yang lebih dinamis.
-
-### 8. 💾 Standalone DMX Scene Recorder & Playback (Tanpa Komputer)
-* Menambahkan fitur penyimpanan adegan (*scene recorder*) ke memori Flash ESP32 / MicroSD Card, sehingga modul dapat memutar adegan pencahayaan panggung statis/animasi secara otomatis saat saklar dinyalakan tanpa perlu laptop yang menyala.
+1. 🌐 **Multi-Protocol Support (sACN / E1.31):** Streaming Architecture for Control Networks (E1.31 multicast) berdampingan dengan Art-Net 4.
+2. 🎛️ **Multi-Universe Hardware Outputs (2–4 Universes):** Menggunakan periferal UART0/UART1/RMT untuk 2–4 port XLR fisik independen (1024–2048 channel).
+3. 🔄 **Bidirectional RDM (ANSI E1.20):** Diagnostik suhu fixture lampu panggung dan konfigurasi start address dari jarak jauh.
+4. ⚡ **Hardwired Ethernet (W5500 / LAN8720 PoE):** Jalur kabel RJ45 fisik bebas interferensi radio WiFi untuk panggung stadion besar.
+5. ☁️ **Over-The-Air (OTA) Web Firmware Update:** Pembaruan firmware drag-and-drop `.bin` file via web browser.
+6. 🔍 **Auto-Discovery Engine (ArtPoll & ArtPollReply):** Auto-deteksi nama node di konsol lighting (*grandMA3, Avolites, Chamsys*).
+7. 📟 **OLED SSD1306 & NeoPixel RGB Status:** Tampilan visual bar-graph channel grafis dan cincin status RGB yang dinamis.
+8. 💾 **Standalone DMX Scene Recorder & Playback:** Perekam adegan panggung ke Flash/MicroSD tanpa butuh laptop menyala.
 
 ---
 
@@ -141,14 +105,14 @@ Bagi siapa pun yang ingin mengembangkan proyek ini lebih jauh, berikut adalah da
 
 > Halo rekan-rekan sesama *developer*, *lighting designer*, teknisi panggung, mahasiswa, dan komunitas *DIY maker* di mana pun Anda berada! 👋✨
 
-Proyek **ESP32 Wireless Art-Net to DMX512 Node (ZZLIGHT)** ini saya dedikasikan dan rilis sepenuhnya sebagai **perangkat lunak dan desain perangkat keras Open Source (MIT License)**. Proyek ini berawal dari kebutuhan nyata di lapangan akan modul konverter DMX nirkabel yang **andal, berkecepatan tinggi, bebas jitter (*zero-jitter*), namun dapat dirakit sendiri dengan biaya sangat terjangkau ($<\$10 / <	ext{Rp }150.000$)**.
+Proyek **ESP32 Wireless Art-Net to DMX512 Node (ZZLIGHT)** ini saya dedikasikan dan rilis sepenuhnya sebagai **perangkat lunak dan desain perangkat keras Open Source (MIT License)**. Proyek ini berawal dari kebutuhan nyata di lapangan akan modul konverter DMX nirkabel yang **andal, berkecepatan tinggi, bebas jitter (*zero-jitter*), namun dapat dirakit sendiri dengan biaya sangat terjangkau ($<\$10 / <\text{Rp }150.000$)**.
 
 ### 🤝 Untuk Anda yang Ingin Merakit Sendiri (*DIY Builders*):
 * **Silakan rakit dan gunakan secara bebas!** Proyek ini telah dilengkapi daftar komponen lengkap (22 item katalog), skematik wiring presisi, dan panduan foto langkah demi langkah.
 * **Tips Perakitan Penting:**
   1. Pastikan jalur suplai daya **5V** ke ESP32 dan MAX485 menggunakan kabel tembaga berkualitas agar tegangan tidak drop saat transmisi WiFi berdaya penuh.
-  2. Tambahkan kapasitor *decoupling* keramik ($100\,	ext{nF}$) dekat pin VCC-GND MAX485 untuk menyaring *noise* frekuensi tinggi.
-  3. Untuk kabel DMX panggung yang sangat panjang (>50 meter), pasang resistor terminasi $120\,\Omega$ ($0.25	ext{W}$) di antara Pin 2 ($D-$) dan Pin 3 ($D+$) pada fixture lampu terakhir untuk mencegah pantulan sinyal (*signal reflection*).
+  2. Tambahkan kapasitor *decoupling* keramik ($100\,\text{nF}$) dekat pin VCC-GND MAX485 untuk menyaring *noise* frekuensi tinggi.
+  3. Untuk kabel DMX panggung yang sangat panjang (>50 meter), pasang resistor terminasi $120\,\Omega$ ($0.25\text{W}$) di antara Pin 2 ($D-$) dan Pin 3 ($D+$) pada fixture lampu terakhir untuk mencegah pantulan sinyal (*signal reflection*).
 
 ### 🍴 Untuk Anda yang Ingin Memodifikasi atau Mem-Fork (*Forkers & Modders*):
 * **Anda sangat dipersilakan untuk mem-fork repositori ini!** Buatlah inovasi baru: ubah desain PCB ke custom SMD PCB KiCad, tambahkan layar OLED, integrasikan protokol sACN E1.31, atau buatkan versi multi-universe.
