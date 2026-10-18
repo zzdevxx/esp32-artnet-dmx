@@ -22,6 +22,18 @@
 
 ---
 
+## 🌐 Ekosistem Riset & Pengembangan ZZLUXORA (Tritunggal Sistem)
+
+Proyek ini merupakan modul perangkat keras penerima dari ekosistem riset terintegrasi **ZZLUXORA**:
+
+| Komponen | Repositori | Peran & Deskripsi |
+|---|---|---|
+| ⚡ **Hardware Node** | [**`zzdree/esp32-artnet-dmx`**](https://gitlab.com/zzdree/esp32-artnet-dmx) *(Repo Ini)* | Prototipe perangkat keras konverter nirkabel Art-Net ke DMX512 berbasis ESP32 Dual-Core (FreeRTOS SMP Core 0 DMX / Core 1 WiFi), transceiver RS-485 MAX485, LCD 16x2 I2C, dan boks fabrikasi Box X4 DIY. |
+| 🎛️ **Software Konsol** | [**`zzdree/zzluxora-v10`**](https://gitlab.com/zzdree/zzluxora-v10) | Perangkat lunak konsol pencahayaan panggung cerdas (Python 3.10+, PySide6/Qt6, NumPy STFT/MIR Core Engine, grandMA3 style mixer 257 fader, 2D/3D stage visualizer, Art-Net 4 DMX512 UDP transmitter). |
+| 🎓 **Naskah & Riset** | [**`zzdree/zzluxora-thesis`**](https://gitlab.com/zzdree/zzluxora-thesis) | Naskah akademik skripsi S1 Teknik Komputer FT UNNES, pemodelan matematis STFT Hann & Russell 2D, protokol uji lapangan 41-kolom, instrumen evaluasi (SUS & Kesesuaian), serta draf ilmiah Bab 1–5 lengkap. |
+
+---
+
 ## ⚡ Quick Navigation
 
 - [✨ Key Features](#-key-features)

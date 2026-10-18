@@ -12,6 +12,7 @@
 #include <LiquidCrystal_I2C.h>
 #include <WiFiUdp.h>
 #include <ESPmDNS.h>
+#include <esp_timer.h>
 #include <string.h>
 
 // --- PINS CONFIGURATION ---
@@ -33,6 +34,11 @@ WiFiUDP Udp;
 const int artNetPort = 6454;
 volatile unsigned long lastArtNetTime = 0;
 TaskHandle_t DMXTask;
+
+// Penghitung paket ArtDmx valid yang benar-benar diterima node.
+// Dibaca oleh handler HTTP pada core lain, karena itu bertipe volatile dan
+// dinaikkan di dalam bagian kritis yang sama dengan penulisan buffer DMX.
+volatile uint32_t artnet_rx_count = 0;
 
 // --- SYSTEM & WIFI VARIABLES ---
 Preferences prefs;
@@ -219,6 +225,7 @@ const char RUN_HTML[] PROGMEM = R"rawliteral(
         
         let dmxColor = d.dmx == "Active" ? "clr-g" : (d.dmx == "No Signal" ? "clr-y" : "clr-r");
         document.getElementById('dx-val').innerHTML = `<span class="${dmxColor}">${d.dmx}</span>`;
+        document.getElementById('rx-val').innerHTML = `<span class="val">${d.rx_count} paket</span>`;
       }).catch(e => console.log(e));
     } 
     
@@ -245,6 +252,7 @@ const char RUN_HTML[] PROGMEM = R"rawliteral(
     <div><span class="lbl">Status</span>: <span id="st-val" class="val">Loading...</span></div>
     <div><span class="lbl">Strength</span>: <span id="sg-val" class="val">Loading...</span></div>
     <div><span class="lbl">DMX</span>: <span id="dx-val" class="val">Loading...</span></div>
+    <div><span class="lbl">RX</span>: <span id="rx-val" class="val">Loading...</span></div>
   </div>
 
   <div class="btn-container">
@@ -260,34 +268,53 @@ const char RUN_HTML[] PROGMEM = R"rawliteral(
 
 
 // --- DMX ENGINE TASK (CORE 0) ---
+// Absolute-time periodic pacing. A frame of 512 DMX bytes at 250000 baud, 8N2
+// (11 bits/byte) takes about 22.5 ms to transmit, and Serial2.flush() blocks for
+// that long. A relative vTaskDelay() added after the flush therefore yields a
+// period of delay + transmit time, and any drift accumulates. Scheduling against
+// an absolute deadline keeps the period equal to DMX_PERIOD_US.
+static const uint32_t DMX_PERIOD_US = 23220;  // 512 / 22050 s, i.e. 43.07 fps
+static uint64_t next_dmx_frame_us = 0;
+
 void DMXCoreTask(void *pvParameters) {
   for (;;) {
     digitalWrite(DMX_EN_PIN, HIGH);
-    
+
     if (frameReady) {
-      portENTER_CRITICAL(&mux); 
+      portENTER_CRITICAL(&mux);
       uint8_t* temp = readBuffer;
       readBuffer = writeBuffer;
       writeBuffer = temp;
       frameReady = false;
-      portEXIT_CRITICAL(&mux);  
+      portEXIT_CRITICAL(&mux);
     }
-    
+
     Serial2.updateBaudRate(96000);
     Serial2.write(0);
     Serial2.flush();
-    
+
     Serial2.updateBaudRate(250000);
-    Serial2.write(0); 
-    
+    Serial2.write(0);
+
     if (millis() - lastArtNetTime > 10000) {
       for (int i = 0; i < 512; i++) Serial2.write(0);
     } else {
-      Serial2.write(readBuffer, 512); 
+      Serial2.write(readBuffer, 512);
     }
     Serial2.flush();
-    
-    vTaskDelay(pdMS_TO_TICKS(22)); 
+
+    // Schedule the next frame against an absolute deadline so the transmit time
+    // is absorbed into the period instead of added to it.
+    uint64_t now_us = esp_timer_get_time();
+    if (next_dmx_frame_us == 0 || next_dmx_frame_us <= now_us) {
+      next_dmx_frame_us = now_us + DMX_PERIOD_US;
+    } else {
+      next_dmx_frame_us += DMX_PERIOD_US;
+    }
+    int64_t wait_us = (int64_t)next_dmx_frame_us - (int64_t)esp_timer_get_time();
+    if (wait_us > 0) {
+      vTaskDelay(pdMS_TO_TICKS(wait_us / 1000));
+    }
   }
 }
 
@@ -348,6 +375,9 @@ void loop() {
           if (length > 512) length = 512;
           
           portENTER_CRITICAL(&mux);
+          // Dihitung di dalam bagian kritis agar hanya paket yang benar-benar
+          // menulis ke writeBuffer yang tercatat.
+          artnet_rx_count++;
           memset(writeBuffer, 0, 512); 
           for (int i = 0; i < length; i++) {
             writeBuffer[i] = packetBuffer[18 + i];
@@ -477,10 +507,17 @@ void setupAPServer() {
     else if (dmxDelta < 10000) dmxStat = "No Signal";
 
     String json = "{";
-    json += "\"ip\":\"192.168.4.1\",";
-    json += "\"wifi\":\"ARTNET-DMX\",";
+    json += "\"ip\":\"" + WiFi.softAPIP().toString() + "\",";
+    json += "\"wifi\":\"" + String(WiFi.softAPSSID()) + "\",";
+    // Mode AP selalu siap menerima: status "Connected" agar halaman /monitor
+    // tetap menandainya hijau, sementara jumlah station nyata dilaporkan
+    // terpisah pada "stations" dan "clients".
     json += "\"status\":\"Connected\",";
     json += "\"strength\":\"Direct Mode\",";
+    json += "\"ssid\":\"" + String(WiFi.softAPSSID()) + "\",";
+    json += "\"stations\":" + String(WiFi.softAPgetStationNum()) + ",";
+    json += "\"clients\":" + String(WiFi.softAPgetStationNum()) + ",";
+    json += "\"rx_count\":" + String(artnet_rx_count) + ",";
     json += "\"dmx\":\"" + dmxStat + "\"";
     json += "}";
     
@@ -544,6 +581,9 @@ void setupRunServer() {
     json += "\"wifi\":\"" + WiFi.SSID() + "\",";
     json += "\"status\":\"" + String(WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected") + "\",";
     json += "\"strength\":\"" + String(WiFi.RSSI()) + "\",";
+    json += "\"ssid\":\"" + WiFi.SSID() + "\",";
+    json += "\"rssi\":" + String(WiFi.RSSI()) + ",";
+    json += "\"rx_count\":" + String(artnet_rx_count) + ",";
     json += "\"dmx\":\"" + dmxStat + "\"";
     json += "}";
     
