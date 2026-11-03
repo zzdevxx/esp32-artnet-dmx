@@ -4,7 +4,7 @@
 [![Protocol Support](https://img.shields.io/badge/Protocols-Art--Net%204%20%7C%20USITT%20DMX512--A-blue?style=for-the-badge)](file:///C:/ANDREAS/esp32-artnet-dmx)
 [![Architecture](https://img.shields.io/badge/OS-FreeRTOS%20SMP%20Dual--Core-8E44AD?style=for-the-badge)](file:///C:/ANDREAS/esp32-artnet-dmx)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](file:///C:/ANDREAS/esp32-artnet-dmx/LICENSE)
-[![Creator](https://img.shields.io/badge/Made%20by-Andreas%20Christwara%20(%40zzdree)-orange?style=for-the-badge&logo=github)](https://github.com/zzdevxx)
+[![Creator](https://img.shields.io/badge/Made%20by-Andreas%20Christwara%20(%40zzdevxx)-orange?style=for-the-badge&logo=github)](https://github.com/zzdevxx)
 
 > **A high-performance, ultra-reliable, zero-jitter DIY Wireless Art-Net 4 to DMX512-A Converter Node powered by ESP32 Dual-Core (FreeRTOS SMP), built-in Captive Portal Web Config, and 16x2 LCD Status Monitor.**
 
@@ -28,9 +28,9 @@ Proyek ini merupakan modul perangkat keras penerima dari ekosistem riset terinte
 
 | Komponen | Repositori | Peran & Deskripsi |
 |---|---|---|
-| ⚡ **Hardware Node** | [**`zzdree/esp32-artnet-dmx`**](https://gitlab.com/zzdree/esp32-artnet-dmx) *(Repo Ini)* | Prototipe perangkat keras konverter nirkabel Art-Net ke DMX512 berbasis ESP32 Dual-Core (FreeRTOS SMP Core 0 DMX / Core 1 WiFi), transceiver RS-485 MAX485, LCD 16x2 I2C, dan boks fabrikasi Box X4 DIY. |
-| 🎛️ **Software Konsol** | [**`zzdree/zzluxora-v10`**](https://gitlab.com/zzdree/zzluxora-v10) | Perangkat lunak konsol pencahayaan panggung cerdas (Python 3.10+, PySide6/Qt6, NumPy STFT/MIR Core Engine, grandMA3 style mixer 257 fader, 2D/3D stage visualizer, Art-Net 4 DMX512 UDP transmitter). |
-| 🎓 **Naskah & Riset** | [**`zzdree/zzluxora-thesis`**](https://gitlab.com/zzdree/zzluxora-thesis) | Naskah akademik skripsi S1 Teknik Komputer FT UNNES, pemodelan matematis STFT Hann & Russell 2D, protokol uji lapangan 41-kolom, instrumen evaluasi (SUS & Kesesuaian), serta draf ilmiah Bab 1–5 lengkap. |
+| ⚡ **Hardware Node** | [**`zzdevxx/esp32-artnet-dmx`**](https://gitlab.com/zzdevxx/esp32-artnet-dmx) *(Repo Ini)* | Prototipe perangkat keras konverter nirkabel Art-Net ke DMX512 berbasis ESP32 Dual-Core (FreeRTOS SMP Core 0 DMX / Core 1 WiFi), transceiver RS-485 MAX485, LCD 16x2 I2C, dan boks fabrikasi Box X4 DIY. |
+| 🎛️ **Software Konsol** | [**`zzdevxx/zzluxora-v10`**](https://gitlab.com/zzdevxx/zzluxora-v10) | Perangkat lunak konsol pencahayaan panggung cerdas (Python 3.10+, PySide6/Qt6, NumPy STFT/MIR Core Engine, grandMA3 style mixer 257 fader, 2D/3D stage visualizer, Art-Net 4 DMX512 UDP transmitter). |
+| 🎓 **Naskah & Riset** | [**`zzdevxx/zzluxora-thesis`**](https://gitlab.com/zzdevxx/zzluxora-thesis) | Naskah akademik skripsi S1 Teknik Komputer FT UNNES, pemodelan matematis STFT Hann & Russell 2D, protokol uji lapangan 41-kolom, instrumen evaluasi (SUS & Kesesuaian), serta draf ilmiah Bab 1–5 lengkap. |
 
 ---
 
@@ -249,7 +249,7 @@ Recommended features for v5:
 
 ## 📜 License & Credits
 
-* **Author:** **Andreas Restuawanta Christwara** ([@zzdree](https://github.com/zzdevxx))
+* **Author:** **Andreas Restuawanta Christwara** ([@zzdevxx](https://github.com/zzdevxx))
 * **Institution:** Universitas Negeri Semarang (UNNES), Computer Engineering.
 * **Academic Reference:** Part of Bachelor's Thesis research in Intelligent Stage Lighting Automation.
 * **License:** Distributed under the **[MIT License](LICENSE)**. Free for commercial, personal, and educational use!

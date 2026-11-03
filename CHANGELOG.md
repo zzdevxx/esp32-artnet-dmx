@@ -120,7 +120,7 @@ Proyek **ESP32 Wireless Art-Net to DMX512 Node (ZZLIGHT)** ini saya rilis sepenu
 Jika Anda memiliki ide untuk menambahkan fitur baru, mendesain custom PCB KiCad SMD, membuat versi multi-universe, atau menambahkan protokol sACN E1.31 untuk melahirkan **Versi 5 (v5.0.0)**:
 * **Silakan banget  di-fork, dimodifikasi, dan dikembangkan sesuka hati!**
 * Repositori ini bebas Anda jadikan basis riset skripsi, produk komersial, maupun perlengkapan panggung rental Anda sendiri.
-* Kami sangat senang jika Anda membagikan kembali hasil inovasi Anda via **Pull Request** atau *showcase* di GitHub kami ([`@zzdree`](https://github.com/zzdree)).
+* Kami sangat senang jika Anda membagikan kembali hasil inovasi Anda via **Pull Request** atau *showcase* di GitHub kami ([`@zzdevxx`](https://github.com/zzdevxx)).
 
 ### 🛠️ Tips Penting bagi yang Merakit Sendiri (*DIY Builders*):
 1. **Suplai Daya 5V:** Gunakan kabel data tembaga tebal dan adaptor berkualitas minimal 1A–2A agar radio WiFi ESP32 tidak drop saat mengirim paket data intensif.
@@ -134,6 +134,6 @@ Jika Anda memiliki ide untuk menambahkan fitur baru, mendesain custom PCB KiCad 
   <i>Happy Making, Happy Coding, and Let the Lights Shine Bright! 💡🎛️🔥</i>
   <br/><br/>
   <b>Salam hangat dari Semarang,</b><br/>
-  <b>Andreas Restuawanta Christwara</b> (<a href="https://github.com/zzdree">@zzdree</a>)<br/>
+  <b>Andreas Restuawanta Christwara</b> (<a href="https://github.com/zzdevxx">@zzdevxx</a>)<br/>
   <i>Teknik Komputer — Universitas Negeri Semarang (UNNES)</i>
 </div>
