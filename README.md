@@ -1,10 +1,10 @@
-# 🎛️ ESP32 Wireless Art-Net to DMX512 Node (ZZLIGHT)
+﻿# 🎛️ ESP32 Wireless Art-Net to DMX512 Node (ZZLIGHT)
 
 [![Hardware Status](https://img.shields.io/badge/Hardware-Production--Ready%20(Grade%20A)-success?style=for-the-badge&logo=espressif&logoColor=white)](file:///C:/ANDREAS/esp32-artnet-dmx)
 [![Protocol Support](https://img.shields.io/badge/Protocols-Art--Net%204%20%7C%20USITT%20DMX512--A-blue?style=for-the-badge)](file:///C:/ANDREAS/esp32-artnet-dmx)
 [![Architecture](https://img.shields.io/badge/OS-FreeRTOS%20SMP%20Dual--Core-8E44AD?style=for-the-badge)](file:///C:/ANDREAS/esp32-artnet-dmx)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](file:///C:/ANDREAS/esp32-artnet-dmx/LICENSE)
-[![Creator](https://img.shields.io/badge/Made%20by-Andreas%20Christwara%20(%40zzdree)-orange?style=for-the-badge&logo=github)](https://github.com/zzdree)
+[![Creator](https://img.shields.io/badge/Made%20by-Andreas%20Christwara%20(%40zzdree)-orange?style=for-the-badge&logo=github)](https://github.com/zzdevxx)
 
 > **A high-performance, ultra-reliable, zero-jitter DIY Wireless Art-Net 4 to DMX512-A Converter Node powered by ESP32 Dual-Core (FreeRTOS SMP), built-in Captive Portal Web Config, and 16x2 LCD Status Monitor.**
 
@@ -208,7 +208,7 @@ The node accepts standard **Art-Net 4 DMX packets (OpCode `0x5000`) on UDP Port 
 * **[grandMA3 onPC](https://www.malighting.com/):** Go to *Menu* ➔ *Network* ➔ *DMX Protocols* ➔ *Art-Net* (Enabled).
 * **[Resolume Arena](https://resolume.com/):** Go to *Preferences* ➔ *DMX* ➔ Add Lumiverse ➔ Target Node IP.
 * **[TouchDesigner](https://derivative.ca/):** Use `DMX Out CHOP` in Art-Net mode.
-* **[ZZLUXORA](https://github.com/zzdree):** Automated audio-reactive AI lighting control engine.
+* **[ZZLUXORA](https://github.com/zzdevxx):** Automated audio-reactive AI lighting control engine.
 
 ---
 
@@ -249,7 +249,7 @@ Recommended features for v5:
 
 ## 📜 License & Credits
 
-* **Author:** **Andreas Restuawanta Christwara** ([@zzdree](https://github.com/zzdree))
+* **Author:** **Andreas Restuawanta Christwara** ([@zzdree](https://github.com/zzdevxx))
 * **Institution:** Universitas Negeri Semarang (UNNES), Computer Engineering.
 * **Academic Reference:** Part of Bachelor's Thesis research in Intelligent Stage Lighting Automation.
 * **License:** Distributed under the **[MIT License](LICENSE)**. Free for commercial, personal, and educational use!
