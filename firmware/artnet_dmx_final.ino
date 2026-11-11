@@ -27,7 +27,6 @@
 #include <WiFiUdp.h>
 #include <ESPmDNS.h>
 #include <esp_timer.h>
-#include <esp_rom_sys.h>
 #include <string.h>
 
 // --- HARDWARE PIN CONFIGURATION ---
@@ -363,7 +362,7 @@ void DMXCoreTask(void *pvParameters) {
       vTaskDelay(pdMS_TO_TICKS(wait_us / 1000 - 1));
     }
     while ((int64_t)(esp_timer_get_time() - frame_start_us) < (int64_t)DMX_PERIOD_US) {
-      esp_rom_delay_us(10);
+      delayMicroseconds(10);
       taskYIELD();
     }
   }
@@ -390,12 +389,21 @@ void setup() {
   // Buat DMX Engine pada Core 0 dengan prioritas tinggi (Priority 10)
   xTaskCreatePinnedToCore(DMXCoreTask, "DMX_T", 4096, NULL, 10, &DMXTaskHandle, 0);
 
-  prefs.begin("wifi_data", true); // Buka read-only
+  prefs.begin("wifi_data", false); // Buka read-write (auto-create jika namespace baru)
   ssid = prefs.getString("ssid", "");
   pass = prefs.getString("pass", "");
   prefs.end(); // Segera tutup handle NVS
 
-  setScreenState(S_BOOT, 1500, S_CONNECTING);
+  setScreenState(S_BOOT);
+  delay(1000); // Tampilkan nama project resmi di LCD selama 1.0 detik
+
+  if (ssid == "") {
+    setScreenState(S_AP_MODE);
+    startAP();
+  } else {
+    setScreenState(S_CONNECTING);
+    connectWiFi();
+  }
 }
 
 // --- MAIN LOOP (CORE 1) ---
@@ -593,7 +601,8 @@ void sendArtPollReply(IPAddress remoteIP, uint16_t remotePort) {
 
   reply[212] = 0x02; // Style: StNode
 
-  Udp.beginPacket(remoteIP, remotePort);
+  // Art-Net 4 spec: Balasan ArtPollReply wajib dikirimkan ke Art-Net port (6454)
+  Udp.beginPacket(remoteIP, ARTNET_PORT);
   Udp.write(reply, sizeof(reply));
   Udp.endPacket();
 }
@@ -715,6 +724,7 @@ void setupAPServer() {
       artnet_rx_count,
       dmxStat.c_str()
     );
+    server.sendHeader("Access-Control-Allow-Origin", "*");
     server.send(200, "application/json", json);
   });
 
@@ -803,6 +813,7 @@ void setupRunServer() {
       artnet_rx_count,
       dmxStat.c_str()
     );
+    server.sendHeader("Access-Control-Allow-Origin", "*");
     server.send(200, "application/json", json);
   });
 
