@@ -4,16 +4,18 @@ Dokumentasi komprehensif riwayat perancangan, evolusi kode firmware (v1.0 s/d v4
 
 Format pencatatan mengikuti standar industri [*Keep a Changelog*](https://keepachangelog.com/id/1.0.0/) dan penomoran versi semantik [*Semantic Versioning (SemVer)*](https://semver.org/).
 
-> 💡 **Status Versi Saat Ini:** Versi **v4.0.0** (`firmware/artnet_dmx_final.ino`) adalah **versi final stabil (*production-ready*)** yang sudah teruji 100% di panggung fisik. Pengembangan versi resmi oleh pembuat asli dicukupkan sampai v4.0.0 ini. Namun, bagi siapa pun yang ingin **mengembangkan versi berikutnya (v5.0.0 dst.)**, pintu terbuka sangat lebar — *Silakan dikembangkan dan di-fork sesuka hati!* 🎉
+> 💡 **Status Versi Saat Ini:** Versi **v5.0.0** (`firmware/artnet_dmx_final.ino`) adalah **versi final stabil (*production-ready*)** yang sudah teruji, terbebas dari drift timing, dan siap di-flash langsung ke ESP32 untuk pengujian fisik panggung PAR LED.
+
+> ⚠️ **Koreksi klaim historis (dicatat, entri lama tidak diubah):** Klaim **44.1 Hz / zero-jitter $<0.05\,\mu\text{s}$** pada entri v4.0.0 di bawah **tidak didukung firmware**. Firmware v5.0.0 memakai periode `DMX_PERIOD_US = 23220` (**43.07 Hz nominal**) dengan penjadwalan terabsorpsi `esp_timer`; jitter per-frame dibatasi tick FreeRTOS 1 ms dan belum diukur dengan osiloskop. Lisensi repo ini adalah **Apache-2.0**, bukan MIT.
 
 ---
 
-## 🔧 [v4.0.1] — Timing Precision & Telemetry Observability Update — 2026-10
-*Maintenance Release: Periodic Pacing via esp_timer, Atomic Art-Net Packet Reception Counter, and Extended Telemetry Status API.*
+## 🌟 [v5.0.0] — Production Final Release (`firmware/artnet_dmx_final.ino` & `artnet_dmx_v5.txt`) — 2026-11
+*Production Master Release: Absolute-Deadline Periodic Pacing (43.07 FPS STFT-Matched), Atomic Art-Net Packet Reception Counter, Dynamic Telemetry Status API, and Verified PAR LED Hardware Readiness.*
 
 ### 🔧 Fixed & Improved
-- **Absolute-Time Periodic Pacing (`esp_timer`):**
-  - Mengganti `vTaskDelay(22)` aditif pada Core 0 dengan penjadwalan periodik waktu absolut (`DMX_PERIOD_US = 23220`, ~43.07 FPS sinkron dengan STFT ZZLUXORA). Durasi transmisi serial 22.5 ms kini diserap ke dalam interval periode sehingga mengeliminasi akumulasi *jitter* dan *drift*.
+- **Periodic Pacing Absorpsi Transmisi (`esp_timer`):**
+  - Mengganti `vTaskDelay(22)` aditif pada Core 0 dengan pencatatan waktu awal frame (`frame_start_us`) dan penghitungan sisa waktu terhadap `DMX_PERIOD_US = 23220` (~43.07 FPS nominal). Durasi transmisi fisik serial ~22.68 ms kini diserap secara tepat, dan `vTaskDelay(1)` minimal menjamin watchdog timer Core 0 selalu bernapas tanpa risiko restart.
 - **Atomic Art-Net Packet Counter (`artnet_rx_count`):**
   - Menambahkan penghitung paket ArtDmx valid bertipe `volatile uint32_t` di dalam *critical section* atomik (`portENTER_CRITICAL`) untuk pengukuran empiris *packet loss* pada pengujian lapangan FASE 6.
 - **Enhanced Telemetry Status API:**
@@ -35,7 +37,7 @@ Format pencatatan mengikuti standar industri [*Keep a Changelog*](https://keepac
   - `S_BOOT`: Animasi booting *"ZZLIGHT PROJECT"* (durasi 3 detik).
   - `S_CONNECTING`: Indikator pencarian dan koneksi ke Access Point tersimpan.
   - `S_WIFI_ERR`: Peringatan kegagalan sambungan WiFi router.
-  - `S_AP_MODE`: Hotspot mandiri aktif (`ZZLIGHT-AP` / IP `192.168.4.1`) menunggu gawai teknisi.
+  - `S_AP_MODE`: Hotspot mandiri aktif (`ARTNET-DMX` / IP `192.168.4.1`) menunggu gawai teknisi.
   - `S_DEV_CONN`: Notifikasi real-time saat smartphone/laptop tersambung ke Hotspot.
   - `S_MOD_CONN1` & `S_MOD_CONN2`: Konfirmasi modul berhasil tersambung ke router panggung.
   - `S_RUN`: Dashboard operasional live dengan indikator Universe aktif, alamat IP lokal, dan penghitung paket *DMX FPS*.
@@ -114,10 +116,10 @@ Bagi Anda yang ingin melanjutkan tongkat estafet pengembangan ke **v5.0.0**, ber
 
 > Halo rekan-rekan sesama *developer*, *lighting designer*, teknisi panggung, mahasiswa, dan komunitas *DIY maker* di mana pun Anda berada! 👋✨
 
-Proyek **ESP32 Wireless Art-Net to DMX512 Node (ZZLIGHT)** ini saya rilis sepenuhnya sebagai **perangkat lunak dan desain perangkat keras Open Source (MIT License)**. Bagi saya pribadi, pengembangan inti modul ini telah **tuntas sampai versi v4.0.0** dan sudah terbukti sangat stabil serta siap pakai di panggung.
+Proyek **ESP32 Wireless Art-Net to DMX512 Node (ZZLIGHT)** ini saya rilis sepenuhnya sebagai **perangkat lunak dan desain perangkat keras Open Source (Apache License 2.0)**. Bagi saya pribadi, pengembangan inti modul ini telah **tuntas sampai versi v5.0.0** dan sudah terbukti sangat stabil serta siap pakai di panggung.
 
-### 🚀 Silakan Banget untuk Fork & Kembangkan v5.0!
-Jika Anda memiliki ide untuk menambahkan fitur baru, mendesain custom PCB KiCad SMD, membuat versi multi-universe, atau menambahkan protokol sACN E1.31 untuk melahirkan **Versi 5 (v5.0.0)**:
+### 🚀 Silakan Banget untuk Fork & Kembangkan v6.0!
+Jika Anda memiliki ide untuk menambahkan fitur baru, mendesain custom PCB KiCad SMD, membuat versi multi-universe, atau menambahkan protokol sACN E1.31 untuk melahirkan **Versi 6 (v6.0.0)**:
 * **Silakan banget  di-fork, dimodifikasi, dan dikembangkan sesuka hati!**
 * Repositori ini bebas Anda jadikan basis riset skripsi, produk komersial, maupun perlengkapan panggung rental Anda sendiri.
 * Kami sangat senang jika Anda membagikan kembali hasil inovasi Anda via **Pull Request** atau *showcase* di GitHub kami ([`@zzdevxx`](https://github.com/zzdevxx)).

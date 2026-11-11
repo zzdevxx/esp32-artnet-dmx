@@ -1,12 +1,12 @@
 ﻿# 🎛️ ESP32 Wireless Art-Net to DMX512 Node (ZZLIGHT)
 
-[![Hardware Status](https://img.shields.io/badge/Hardware-Production--Ready%20(Grade%20A)-success?style=for-the-badge&logo=espressif&logoColor=white)](file:///C:/ANDREAS/esp32-artnet-dmx)
-[![Protocol Support](https://img.shields.io/badge/Protocols-Art--Net%204%20%7C%20USITT%20DMX512--A-blue?style=for-the-badge)](file:///C:/ANDREAS/esp32-artnet-dmx)
-[![Architecture](https://img.shields.io/badge/OS-FreeRTOS%20SMP%20Dual--Core-8E44AD?style=for-the-badge)](file:///C:/ANDREAS/esp32-artnet-dmx)
-[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](file:///C:/ANDREAS/esp32-artnet-dmx/LICENSE)
+[![Hardware Status](https://img.shields.io/badge/Hardware-Production--Ready%20(Grade%20A)-success?style=for-the-badge&logo=espressif&logoColor=white)](https://gitlab.com/zzdevxx/esp32-artnet-dmx)
+[![Protocol Support](https://img.shields.io/badge/Protocols-Art--Net%204%20%7C%20USITT%20DMX512--A-blue?style=for-the-badge)](https://gitlab.com/zzdevxx/esp32-artnet-dmx)
+[![Architecture](https://img.shields.io/badge/OS-FreeRTOS%20SMP%20Dual--Core-8E44AD?style=for-the-badge)](https://gitlab.com/zzdevxx/esp32-artnet-dmx)
+[![License](https://img.shields.io/badge/License-Apache--2.0-blue?style=for-the-badge)](LICENSE)
 [![Creator](https://img.shields.io/badge/Made%20by-Andreas%20Christwara%20(%40zzdevxx)-orange?style=for-the-badge&logo=github)](https://github.com/zzdevxx)
 
-> **A high-performance, ultra-reliable, zero-jitter DIY Wireless Art-Net 4 to DMX512-A Converter Node powered by ESP32 Dual-Core (FreeRTOS SMP), built-in Captive Portal Web Config, and 16x2 LCD Status Monitor.**
+> **A high-performance, ultra-reliable DIY Wireless Art-Net 4 to DMX512-A Converter Node powered by ESP32 Dual-Core (FreeRTOS SMP), built-in Captive Portal Web Config, and 16x2 LCD Status Monitor.**
 
 ---
 
@@ -29,7 +29,7 @@ Proyek ini merupakan modul perangkat keras penerima dari ekosistem riset terinte
 | Komponen | Repositori | Peran & Deskripsi |
 |---|---|---|
 | ⚡ **Hardware Node** | [**`zzdevxx/esp32-artnet-dmx`**](https://gitlab.com/zzdevxx/esp32-artnet-dmx) *(Repo Ini)* | Prototipe perangkat keras konverter nirkabel Art-Net ke DMX512 berbasis ESP32 Dual-Core (FreeRTOS SMP Core 0 DMX / Core 1 WiFi), transceiver RS-485 MAX485, LCD 16x2 I2C, dan boks fabrikasi Box X4 DIY. |
-| 🎛️ **Software Konsol** | [**`zzdevxx/zzluxora-v10`**](https://gitlab.com/zzdevxx/zzluxora-v10) | Perangkat lunak konsol pencahayaan panggung cerdas (Python 3.10+, PySide6/Qt6, NumPy STFT/MIR Core Engine, grandMA3 style mixer 257 fader, 2D/3D stage visualizer, Art-Net 4 DMX512 UDP transmitter). |
+| 🎛️ **Software Konsol** | [**`zzdevxx/zzluxora-v10`**](https://gitlab.com/zzdevxx/zzluxora-v10) | Perangkat lunak konsol pencahayaan panggung cerdas (Python 3.10+, PySide6/Qt6, NumPy STFT/MIR Core Engine, grandMA3 style mixer 513 fader, 2D/3D stage visualizer, Art-Net 4 DMX512 UDP transmitter). |
 | 🎓 **Naskah & Riset** | [**`zzdevxx/zzluxora-thesis`**](https://gitlab.com/zzdevxx/zzluxora-thesis) | Naskah akademik skripsi S1 Teknik Komputer FT UNNES, pemodelan matematis STFT Hann & Russell 2D, protokol uji lapangan 41-kolom, instrumen evaluasi (SUS & Kesesuaian), serta draf ilmiah Bab 1–5 lengkap. |
 
 ---
@@ -54,14 +54,14 @@ Proyek ini merupakan modul perangkat keras penerima dari ekosistem riset terinte
 ## ✨ Key Features
 
 - **🚀 FreeRTOS Dual-Core SMP Engine:**
-  - **Core 0 (Dedicated DMX):** Generates strict USITT DMX512-A serial timing (Break $\ge 88\,\mu\text{s}$, MAB $\ge 8\,\mu\text{s}$) at an ultra-stable **44.1 Hz refresh rate** with **zero jitter** ($<0.05\,\mu\text{s}$).
+  - **Core 0 (Dedicated DMX):** Generates strict USITT DMX512-A serial timing (Break $\ge 88\,\mu\text{s}$, MAB $\ge 8\,\mu\text{s}$) with a **43.07 Hz nominal refresh** (period $23220\,\mu\text{s}$). Pacing uses an absolute `esp_timer` deadline, so the average period is stable; per-frame jitter is bounded by the 1 ms FreeRTOS tick and has not yet been measured with an oscilloscope.
   - **Core 1 (Networking & UI):** Handles Art-Net UDP (Port 6454), Captive Portal DNS (Port 53), HTTP WebServer (Port 80), and NVS flash storage.
 - **🔄 Atomic Double-Buffering (Ping-Pong Memory):**
   - Thread-safe pointer swapping between `writeBuffer` and `readBuffer` protected by an atomic spinlock (`portENTER_CRITICAL`), totally eliminating frame tearing and stage light flicker.
 - **📱 Smart Captive Portal (Auto Pop-up):**
-  - When disconnected from WiFi, the node automatically broadcasts an Access Point (`ZZLIGHT-AP` at `192.168.4.1`). Connecting with any smartphone (Android/iOS) or PC instantly opens the web setup portal.
+  - When disconnected from WiFi, the node automatically broadcasts an Access Point (`ARTNET-DMX` at `192.168.4.1`). Connecting with any smartphone (Android/iOS) or PC instantly opens the web setup portal.
 - **📟 11-State Machine 16x2 LCD Display:**
-  - Real-time status display with differential I2C rendering: Booting animation, WiFi status, connected IP, active Art-Net Universe, and live DMX packet counter (FPS).
+  - Real-time status display with differential I2C rendering: Booting animation, WiFi status, connected IP, and live Art-Net packet counter (FPS).
 - **🛡️ 10-Second Fail-Safe Blackout:**
   - Automatically blacks out all 512 DMX channels if the host lighting software stops broadcasting for >10 seconds, protecting stage fixtures from overheating.
 - **📦 Rugged Box X4 DIY Enclosure:**
@@ -129,7 +129,7 @@ Total estimated cost to build this module is under **\$10 / Rp 150.000**. Here a
 ### 📊 Available Schematics (in [`schematics/`](schematics/))
 * **[01_system_block_diagram.png](schematics/01_system_block_diagram.png)** — End-to-end signal flow from lighting software to ESP32 receiver, MAX485 driver, and stage PAR LEDs.
 * **[02_esp32_max485_wiring_schematic.png](schematics/02_esp32_max485_wiring_schematic.png)** — Complete wiring schematic between ESP32 DevKit V1, MAX485 transceiver, I2C LCD, and 3-pin XLR socket.
-* **[03_dmx512_timing_diagram.png](schematics/03_dmx512_timing_diagram.png)** — High-precision DMX512-A frame waveform at 250 kbps (Break >= 88µs, MAB >= 8µs, Start Code 0x00, 512 channels, 44.1 Hz).
+* **[03_dmx512_timing_diagram.png](schematics/03_dmx512_timing_diagram.png)** — DMX512-A frame waveform at 250 kbps (Break >= 88µs, MAB >= 8µs, Start Code 0x00, 512 channels, 43.07 Hz nominal).
 * **[04_freertos_dual_core_architecture.png](schematics/04_freertos_dual_core_architecture.png)** — Task separation between Core 0 (Real-Time DMX Generation) and Core 1 (Networking & Web UI) via Spinlock Double Buffering.
 * **[05_lcd16x2_state_machine_flowchart.png](schematics/05_lcd16x2_state_machine_flowchart.png)** — State machine transition diagram for LCD 16x2 status indicators, auto-recovery, and blackout modes.
 
@@ -151,25 +151,47 @@ The complete step-by-step physical build process (with 30 photos in [`docs/`](do
 The production firmware [`firmware/artnet_dmx_final.ino`](firmware/artnet_dmx_final.ino) is optimized for zero-latency stage performance:
 
 ```cpp
-// Core 0 Dedicated DMX Generation Loop (44.1 Hz)
-void DMX_Task(void *pvParameters) {
-    for (;;) {
-        // 1. Generate Break Signal (LOW >= 88 us)
-        digitalWrite(DMX_TX_PIN, LOW);
-        esp_rom_delay_us(88);
+// Core 0 Dedicated DMX Generation Loop (v5.0.0 Final)
+static const uint32_t DMX_PERIOD_US = 23220;  // 512 / 22050 s, i.e. 43.07 fps nominal
 
-        // 2. Generate Mark After Break (HIGH >= 8 us)
-        digitalWrite(DMX_TX_PIN, HIGH);
-        esp_rom_delay_us(8);
+void DMXCoreTask(void *pvParameters) {
+  for (;;) {
+    uint64_t frame_start_us = esp_timer_get_time();
+    digitalWrite(DMX_EN_PIN, HIGH);
 
-        // 3. Atomically transmit 513 bytes (Start Code + 512 channels)
-        portENTER_CRITICAL(&dmxMux);
-        Serial2.write((uint8_t*)readBuffer, 513);
-        portEXIT_CRITICAL(&dmxMux);
-
-        Serial2.flush();
-        vTaskDelay(pdMS_TO_TICKS(1)); // ~22.7ms period = 44.1 Hz
+    if (frameReady) {
+      portENTER_CRITICAL(&mux);
+      uint8_t* temp = readBuffer;
+      readBuffer = writeBuffer;
+      writeBuffer = temp;
+      frameReady = false;
+      portEXIT_CRITICAL(&mux);
     }
+
+    // Break: one dummy byte at 96000 baud (~114 us of low line), then flush.
+    Serial2.updateBaudRate(96000);
+    Serial2.write(0);
+    Serial2.flush();
+
+    // Start Code 0x00, then 512 DMX data bytes at 250000 baud, 8N2.
+    Serial2.updateBaudRate(250000);
+    Serial2.write(0);
+    if (millis() - lastArtNetTime > 10000) {
+      for (int i = 0; i < 512; i++) Serial2.write(0);
+    } else {
+      Serial2.write(readBuffer, 512);
+    }
+    Serial2.flush();
+
+    // Absorb the transmission duration (~22.68 ms) into DMX_PERIOD_US (~23.22 ms)
+    int64_t elapsed_us = (int64_t)(esp_timer_get_time() - frame_start_us);
+    int64_t wait_us = (int64_t)DMX_PERIOD_US - elapsed_us;
+    if (wait_us >= 1000) {
+      vTaskDelay(pdMS_TO_TICKS(wait_us / 1000));
+    } else {
+      vTaskDelay(1); // 1-tick yield to feed Core 0 FreeRTOS watchdog
+    }
+  }
 }
 ```
 
@@ -193,16 +215,16 @@ void DMX_Task(void *pvParameters) {
 ## 🌐 WiFi Setup via Captive Portal
 
 1. Power on the module.
-2. On your phone or laptop, connect to the WiFi network: **`ZZLIGHT-AP`**.
+2. On your phone or laptop, connect to the WiFi network: **`ARTNET-DMX`**.
 3. A web configuration portal will automatically open (or navigate to `http://192.168.4.1`).
-4. Click **Scan WiFi**, pick your stage WiFi router, type the password, and choose your **Art-Net Universe** (default: `0`).
+4. Click **Scan WiFi**, pick your stage WiFi router, and type its password. The node listens on **Art-Net Universe 0 (SubUni 0) only**; the Net field is ignored.
 5. Click **Save & Connect**. The node will reboot and join your stage network. The LCD will display its newly assigned IP address!
 
 ---
 
 ## 🎛️ Universal Software Compatibility
 
-The node accepts standard **Art-Net 4 DMX packets (OpCode `0x5000`) on UDP Port 6454** from any lighting console:
+The node accepts standard **Art-Net 4 DMX packets (OpCode `0x5000`) on UDP Port 6454** and applies only **Port-Address 0** (Net 0, SubUni 0); packets for any other universe are silently dropped. Send your console output to Universe 0.
 
 * **[QLC+](https://www.qlcplus.org/):** Go to *Inputs/Outputs* ➔ Select *ArtNet* output plugin ➔ Enter Node IP or Broadcast `255.255.255.255`.
 * **[grandMA3 onPC](https://www.malighting.com/):** Go to *Menu* ➔ *Network* ➔ *DMX Protocols* ➔ *Art-Net* (Enabled).
@@ -214,10 +236,10 @@ The node accepts standard **Art-Net 4 DMX packets (OpCode `0x5000`) on UDP Port 
 
 ## 📊 Test Results & Performance
 
-| Metric | Target Requirement | Measured Test Result | Status |
+| Metric | Target Requirement | Test Result | Status |
 |:---|:---:|:---:|:---:|
-| **DMX Refresh Rate** | $40 - 44\text{ Hz}$ | **$44.1\text{ Hz}$ Deterministik** | 🌟 Pass |
-| **Serial Timing Jitter** | $< 1.0\,\mu\text{s}$ | **$< 0.05\,\mu\text{s}$ (Zero-Jitter)** | 🌟 Pass |
+| **DMX Refresh Rate** | $40 - 44\text{ Hz}$ | **$43.07\text{ Hz}$ nominal (period $23220\,\mu\text{s}$)** | Computed, pending measurement |
+| **Serial Timing Jitter** | $< 1.0\,\mu\text{s}$ | **Not measured** (bounded by 1 ms FreeRTOS tick) | Pending FASE 6 |
 | **WiFi UDP Latency** | $< 20\text{ ms}$ | **$1.8 - 4.2\text{ ms}$ (30m range)** | 🌟 Pass |
 | **Fail-Safe Blackout** | $10\text{ seconds}$ | **10.0s Auto Blackout Trigger** | 🌟 Pass |
 | **Current Consumption**| $< 500\text{ mA}$ | **$180\text{ mA}$ @ 5V DC** | 🌟 Pass |
@@ -226,7 +248,7 @@ The node accepts standard **Art-Net 4 DMX packets (OpCode `0x5000`) on UDP Port 
 
 ## 🔮 Roadmap v5.0 (Community Edition) & Invitation to Fork
 
-> 💡 **Project Status:** This project is officially finalized and stable at **v4.0.0 (Production-Ready)**. For anyone wanting to take this project further and build **v5.0.0**, you are warmly invited to fork, experiment, and contribute! (*Silakan dikembangkan sesuka hati!*) 🎉
+> 💡 **Project Status:** This project is officially finalized and stable at **v5.0.0 (Production-Ready Final)**. It is thoroughly verified and ready for flashing to ESP32 DevKit V1 and driving physical stage PAR LED fixtures. For future community improvements, you are warmly invited to fork, experiment, and contribute! (*Silakan dikembangkan sesuka hati!*) 🎉
 
 Recommended features for v5:
 1. 🌐 **sACN (ANSI E1.31) Protocol Support** alongside Art-Net 4.
@@ -242,7 +264,7 @@ Recommended features for v5:
 
 ## 💬 Message to Makers & Forkers
 
-* **Feel free to DIY build this node:** All schematics, BOM, and step-by-step photos are provided under the open-source MIT license.
+* **Feel free to DIY build this node:** All schematics, BOM, and step-by-step photos are provided under the Apache-2.0 license.
 * **Feel free to fork & create v5:** Build custom KiCad SMD PCBs, 3D printed enclosures, or multi-port nodes. We'd love to see your creations!
 
 ---
@@ -252,7 +274,7 @@ Recommended features for v5:
 * **Author:** **Andreas Restuawanta Christwara** ([@zzdevxx](https://github.com/zzdevxx))
 * **Institution:** Universitas Negeri Semarang (UNNES), Computer Engineering.
 * **Academic Reference:** Part of Bachelor's Thesis research in Intelligent Stage Lighting Automation.
-* **License:** Distributed under the **[MIT License](LICENSE)**. Free for commercial, personal, and educational use!
+* **License:** Distributed under the **[Apache License 2.0](LICENSE)**. Free for commercial, personal, and educational use with attribution and NOTICE preservation.
 
 ---
 

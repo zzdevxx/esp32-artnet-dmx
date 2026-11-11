@@ -9,10 +9,10 @@
 ## 📌 Metadata Dokumen
 - **Nama Produk:** ZZLIGHT Art-Net to DMX512 Converter Module
 - **Kode Proyek:** `ZZLIGHT-HW-01`
-- **Versi Produk:** `v4.0.0` (Final Production Release)
+- **Versi Produk:** `v5.0.0` (Final Production Release)
 - **Target Board / Core:** ESP32 DevKit V1 (ESP-WROOM-32 30-Pin) / Arduino ESP32 Core v3.x
 - **Peneliti / Penulis:** Andreas Restuawanta Christwara (`NIM: 5312422036`)
-- **Dosen Pembimbing:** Khoirudin Fathoni, S.T., M.T. (`NIP: 19900929292015041001`)
+- **Dosen Pembimbing:** Mario Norman Syah, S.Pd., M.Eng.
 - **Institusi:** Program Studi Teknik Komputer, Jurusan Teknik Elektro, Fakultas Teknik, Universitas Negeri Semarang (UNNES)
 - **Status Dokumen:** **APPROVED & PRODUCTION READY (GRADE A)**
 
@@ -107,7 +107,7 @@ Membangun modul konverter node **Art-Net to DMX512 nirkabel mandiri** yang:
 +-----------------------------------------------------------------------------------------+
   [CORE 0: DMX DEDICATED REAL-TIME TASK]          [CORE 1: NETWORKING & UI TASK]
   • Prioritas: configMAX_PRIORITIES - 1           • Prioritas: Standard Arduino loop()
-  • Refresh Rate: 44.1 Hz Deterministik           • Socket: UDP Port 6454 (WiFiUDP)
+  • Refresh Rate: 43.07 Hz Nominal (23220 us)  • Socket: UDP Port 6454 (WiFiUDP)
   • Sinyal DMX512 Timing Generator:               • Parser: ArtDmx Payload Validation
     - Break Time : LOW selama >= 88 µs            • Mutex: portENTER_CRITICAL(&dmxMux)
     - MAB Time   : HIGH selama >= 8 µs            • WebServer: HTTP Port 80 & DNS Port 53
@@ -118,7 +118,7 @@ Membangun modul konverter node **Art-Net to DMX512 nirkabel mandiri** yang:
                            ▼
               [DOUBLE BUFFERING / PING-PONG]
               • writeBuffer (Core 1) <---> readBuffer (Core 0)
-              • Bebas Race Condition & Bebas Frame Tearing (<0.05 µs Jitter)
+              • Bebas Race Condition & Bebas Frame Tearing (jitter belum diukur, batas tick 1 ms)
 +-----------------------------------------------------------------------------------------+
 ```
 
@@ -136,8 +136,8 @@ Membangun modul konverter node **Art-Net to DMX512 nirkabel mandiri** yang:
 
 | Parameter Pengujian | Target Kebutuhan Produk | Hasil Evaluasi Sistem | Status |
 |:---|:---:|:---:|:---:|
-| **Frekuensi Refresh Rate DMX** | $40 - 44\text{ Hz}$ | **$44.1\text{ Hz}$ Deterministik** | 🌟 Pass (Grade A) |
-| **Jitter Transmisi Serial** | $< 1.0\,\mu\text{s}$ | **$< 0.05\,\mu\text{s}$ (Zero-Jitter)** | 🌟 Pass (Grade A) |
+| **Frekuensi Refresh Rate DMX** | $40 - 44\text{ Hz}$ | **$43.07\text{ Hz}$ nominal (23220 us)** | Dihitung, menunggu pengukuran |
+| **Jitter Transmisi Serial** | $< 1.0\,\mu\text{s}$ | **Belum diukur** (batas tick FreeRTOS 1 ms) | Menunggu FASE 6 |
 | **Latensi Jaringan WiFi (UDP)** | $< 20\text{ ms}$ | **$1.8 - 4.2\text{ ms}$ (Radius 30m)** | 🌟 Pass (Grade A) |
 | **Keberhasilan Fail-Safe Blackout** | $10\text{ detik}$ | **10.0 Detik Otomatis Padam** | 🌟 Pass (Grade A) |
 | **Deteksi Otomatis Captive Portal** | Android / iOS / Win | **100% Otomatis Terbuka** | 🌟 Pass (Grade A) |

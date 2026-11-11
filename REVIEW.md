@@ -3,7 +3,7 @@
 **Pengembang:** Andreas Restuawanta Christwara (NIM: 5312422036)  
 **Program Studi:** Teknik Komputer, Universitas Negeri Semarang (UNNES)  
 **Status Evaluasi:** Production-Ready / Grade A (Layak Uji & Skripsi)  
-**Dokumen Terkait:** [PRD.md](file:///C:/ANDREAS/esp32-artnet-dmx/PRD.md) | [README.md](file:///C:/ANDREAS/esp32-artnet-dmx/README.md) | [CHANGELOG.md](file:///C:/ANDREAS/esp32-artnet-dmx/CHANGELOG.md) | [REPORT.pdf](file:///C:/ANDREAS/esp32-artnet-dmx/REPORT.pdf)
+**Dokumen Terkait:** [PRD.md](PRD.md) | [README.md](README.md) | [CHANGELOG.md](CHANGELOG.md) | [REPORT.pdf](REPORT.pdf)
 
 ---
 
@@ -11,23 +11,23 @@
 
 | Berkas / Direktori | Tipe & Ukuran | Deskripsi & Peran Fungsional |
 |:---|:---:|:---|
-| **[`PRD.md`](file:///C:/ANDREAS/esp32-artnet-dmx/PRD.md)** | Dokumen PRD (14.2 KB) | Dokumen spesifikasi teknis resmi, kontrak antarmuka hardware/software, dan kriteria penerimaan. |
-| **[`README.md`](file:///C:/ANDREAS/esp32-artnet-dmx/README.md)** | Panduan (14.5 KB) | Tutorial komprehensif 8 bab dengan indeks gambar terstruktur dan panduan pengoperasian. |
-| **[`REPORT.pdf`](file:///C:/ANDREAS/esp32-artnet-dmx/REPORT.pdf)** | Laporan PDF (19.8 MB) | Laporan penelitian akademik formal UNNES dengan 58 visual, running header-footer, dan evaluasi performa. |
-| **[`CHANGELOG.md`](file:///C:/ANDREAS/esp32-artnet-dmx/CHANGELOG.md)** | Log Riwayat (6.8 KB) | Catatan evolusi arsitektur firmware dari PoC v1.0 hingga rilis stabil Final v4.0.0. |
-| **[`RESULT.png`](file:///C:/ANDREAS/esp32-artnet-dmx/RESULT.png)** | Banner 16:9 (963.4 KB) | Banner live setup (Acer Swift 3, Box X4 presisi, dan 4 PAR LED ungu, merah, oranye, hijau). |
-| **[`images/`](file:///C:/ANDREAS/esp32-artnet-dmx/images/)** | Katalog (22 Gambar) | 22 berkas gambar alat dan bahan berlatar belakang putih bersih murni (`#FFFFFF`). |
-| **[`schematics/`](file:///C:/ANDREAS/esp32-artnet-dmx/schematics/)** | Diagram (5 Berkas) | Diagram blok sistem, skematik wiring, timing DMX512-A, arsitektur FreeRTOS, dan flowchart LCD (300 DPI). |
-| **[`docs/`](file:///C:/ANDREAS/esp32-artnet-dmx/docs/)** | Galeri Foto (30 Foto) | Dokumentasi visual asli tahapan fabrikasi komponen, pelubangan box X4, penyolderan, dan uji coba fixture. |
-| **[`firmware/artnet_dmx_final.ino`](file:///C:/ANDREAS/esp32-artnet-dmx/firmware/artnet_dmx_final.ino)** | Kode Produksi (22.8 KB) | Source code firmware utama (Dual-Core FreeRTOS SMP, Double Buffer Mutex, Captive Portal, LCD 16x2). |
+| **[`PRD.md`](PRD.md)** | Dokumen PRD (11.4 KB) | Dokumen spesifikasi teknis resmi, kontrak antarmuka hardware/software, dan kriteria penerimaan. |
+| **[`README.md`](README.md)** | Panduan (17.5 KB) | Tutorial komprehensif 8 bab dengan indeks gambar terstruktur dan panduan pengoperasian. |
+| **[`REPORT.pdf`](REPORT.pdf)** | Laporan PDF (19.8 MB) | Laporan penelitian akademik formal UNNES dengan 58 visual, running header-footer, dan evaluasi performa. |
+| **[`CHANGELOG.md`](CHANGELOG.md)** | Log Riwayat (11.4 KB) | Catatan evolusi arsitektur firmware dari PoC v1.0 hingga rilis stabil Final v5.0.0. |
+| **[`RESULT.png`](RESULT.png)** | Banner 16:9 (963.4 KB) | Banner live setup (Acer Swift 3, Box X4 presisi, dan 4 PAR LED ungu, merah, oranye, hijau). |
+| **[`images/`](images/)** | Katalog (22 Gambar) | 22 berkas gambar alat dan bahan berlatar belakang putih bersih murni (`#FFFFFF`). |
+| **[`schematics/`](schematics/)** | Diagram (5 Berkas) | Diagram blok sistem, skematik wiring, timing DMX512-A, arsitektur FreeRTOS, dan flowchart LCD (300 DPI). |
+| **[`docs/`](docs/)** | Galeri Foto (30 Foto) | Dokumentasi visual asli tahapan fabrikasi komponen, pelubangan box X4, penyolderan, dan uji coba fixture. |
+| **[`firmware/artnet_dmx_final.ino`](firmware/artnet_dmx_final.ino)** | Kode Produksi (25.1 KB) | Source code firmware utama (Dual-Core FreeRTOS SMP, Double Buffer Mutex, Captive Portal, LCD 16x2). |
 
 ---
 
-## 2. 🔬 Evaluasi Komparatif Firmware (v1.0 s/d Final v4.0.0)
+## 2. 🔬 Evaluasi Komparatif Firmware (v1.0 s/d Final v5.0.0)
 
-| Parameter Arsitektur | Firmware v1.0 (PoC) | Firmware v2.0 | Firmware v3.0 | Firmware Final (v4.0.0) | Evaluasi Teknik |
+| Parameter Arsitektur | Firmware v1.0 (PoC) | Firmware v2.0 | Firmware v3.0 | Firmware Final (v5.0.0) | Evaluasi Teknik |
 |:---|:---:|:---:|:---:|:---:|:---|
-| **Model Multithreading** | Monolitik (1 Thread) | Dual-Core Unsynchronized | Dual-Core Sync | **FreeRTOS SMP Pin-to-Core** | **Grade A+**: Isolasi Core 0 menjamin zero-jitter 44.1 Hz tanpa terganggu beban jaringan. |
+| **Model Multithreading** | Monolitik (1 Thread) | Dual-Core Unsynchronized | Dual-Core Sync | **FreeRTOS SMP Pin-to-Core** | **Grade A+**: Isolasi Core 0 menjamin perioda 43.07 Hz nominal tanpa terganggu beban jaringan (jitter belum diukur). |
 | **Proteksi Memori DMX** | Single Buffer Global | Single Buffer Global | Double Buffer Mutex | **Double Buffer + Spinlock** | **Grade A+**: Mencegah kondisi balapan (*data race*) dan robekan frame (*frame tearing*). |
 | **Konfigurasi Jaringan** | Hardcoded SSID | WebServer Sederhana | WebServer + Scan | **Captive Portal DNS Hijack** | **Grade A+**: Otomatis membuka laman setup di Android/iOS/Windows saat tersambung. |
 | **Tampilan Status Display** | Teks Statis Sederhana | Update I2C Berkala | Update I2C Terstruktur | **11-State Differential LCD** | **Grade A**: Hanya merender karakter yang berubah, menghemat siklus bus I2C. |
