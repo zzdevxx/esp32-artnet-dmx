@@ -1,13 +1,13 @@
 /*
- * ZZLIGHT PROJECT - ARTNET TO DMX MODULE (v5.1.0 Hardened Production Master)
+ * ZZLIGHT PROJECT - ARTNET TO DMX MODULE (v5.2.0 Hardened Production Master)
  * Hardware : ESP32 DevKit V1, MAX485 Transceiver, LCD 16x2 I2C (PCF8574)
- * Framework: Arduino ESP32 Core v3.x / FreeRTOS Dual-Core SMP
+ * Framework: Arduino ESP32 Core v2.x / v3.x / FreeRTOS Dual-Core SMP
  *
  * Professional Stage Hardening:
- *  1. Full Art-Net 4 Compliance: 15-bit Port-Address (Net 0..127 + SubUni 0..255),
- *     ProtVer >= 14, even length bounds checking, sequence order tracking.
+ *  1. Full Art-Net 4 Spec Compliance: 15-bit Port-Address (Net 0..127 + SubUni 0..255),
+ *     ProtVer >= 14, even length bounds check, sequence reset resilience.
  *  2. Full ArtPoll & ArtPollReply (OpCode 0x2000 / 0x2100) Node Discovery Engine
- *     (auto-detected by QLC+, grandMA, Resolume).
+ *     with strictly verified byte offsets (auto-detected by QLC+, grandMA, Resolume).
  *  3. Lock-Free Triple Buffering (Atomic Pointer Exchange) - 100% Free of Frame Tearing.
  *  4. UDP Socket Queue Drain Loop - Zero Packet Starvation under Heavy 2.4 GHz Traffic.
  *  5. Wi-Fi Modem Sleep Disabled (WiFi.setSleep(false)) - Ultra-Low Stable Latency (<3ms).
@@ -16,6 +16,9 @@
  *  8. Permanent Background Auto-Reconnect Saga - Eliminates AP Mode Lockout.
  *  9. Non-Blocking Display State Machine - Zero Blocking Delays on Networking Core 1.
  * 10. Web Security Hardening: XSS Protection via textContent, Form Validation, JSON Escaping.
+ * 11. Single-Pass Web Route Registration: Eliminates route shadowing on reconnect.
+ * 12. FreeRTOS Watchdog Feeder: Guaranteed vTaskDelay(1) prevents TWDT starvation on Core 0.
+ * 13. High-Integrity UI: Tabular numerals (tabular-nums) and 5-state interactive button contract.
  */
 
 #include <WiFi.h>
@@ -60,7 +63,6 @@ static volatile bool dmx_new_frame_ready = false;
 static volatile uint32_t artnet_rx_count = 0;
 static volatile unsigned long lastArtNetTime = 0;
 static volatile bool hasReceivedFirstPacket = false;
-static uint8_t last_artnet_seq = 0;
 
 WiFiUDP Udp;
 TaskHandle_t DMXTaskHandle;
@@ -97,8 +99,7 @@ void setScreenState(ScreenState newState, unsigned long holdDuration = 0, Screen
 void handleLCDAnimation();
 void startAP();
 void connectWiFi();
-void setupAPServer();
-void setupRunServer();
+void registerWebRoutes();
 void DMXCoreTask(void *pvParameters);
 void sendArtPollReply(IPAddress remoteIP, uint16_t remotePort);
 String escapeJsonString(const String& input);
@@ -119,15 +120,19 @@ const char AP_HTML[] PROGMEM = R"rawliteral(
     h1 { font-weight: 900; font-style: italic; letter-spacing: 2px; margin-bottom: 25px; }
     .container { width: 100%; max-width: 340px; display: flex; flex-direction: column; align-items: center; }
     .wifi-box { background: #1e1e1e; border-radius: 8px; padding: 5px; width: 100%; max-height: 220px; overflow-y: auto; border: 1px solid #333; box-sizing: border-box; margin-bottom: 15px; }
-    .wifi-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 10px; border-bottom: 1px solid #333; cursor: pointer; transition: 0.2s; }
+    .wifi-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 10px; border-bottom: 1px solid #333; cursor: pointer; transition: 0.15s; }
     .wifi-item:last-child { border-bottom: none; }
     .wifi-item:hover { background: #2a2a2a; }
     .w-left { font-size: 15px; display: flex; align-items: center; gap: 10px; }
-    .w-right { font-size: 14px; color: #aaa; display: flex; align-items: center; gap: 8px; }
-    .btn-refresh { background-color: #e67e22; color: white; padding: 12px; border: none; border-radius: 6px; font-size: 15px; font-weight: 700; cursor: pointer; width: 100%; margin-bottom: 30px; }
+    .w-right { font-size: 14px; color: #aaa; display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
+    .btn-refresh { background-color: #e67e22; color: white; padding: 12px; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; font-size: 15px; font-weight: 700; cursor: pointer; width: 100%; margin-bottom: 30px; transition: 0.15s; }
+    .btn-refresh:hover { filter: brightness(1.15); }
+    .btn-refresh:active { transform: scale(0.98); }
     form { width: 100%; }
     input[type="text"], input[type="password"] { background-color: #ffffff; color: #000000; padding: 14px; margin-bottom: 12px; width: 100%; border-radius: 6px; border: none; font-size: 16px; box-sizing: border-box; text-align: center; }
-    .btn-connect { background-color: #2ecc71; color: white; padding: 14px; border: none; border-radius: 6px; font-size: 16px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 5px; }
+    .btn-connect { background-color: #2ecc71; color: white; padding: 14px; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; font-size: 16px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 5px; transition: 0.15s; }
+    .btn-connect:hover { filter: brightness(1.15); }
+    .btn-connect:active { transform: scale(0.98); }
     .footer-link { color: #888888; text-decoration: underline; font-size: 15px; margin-top: 40px; display: block; }
   </style>
   <script>
@@ -217,18 +222,22 @@ const char RUN_HTML[] PROGMEM = R"rawliteral(
     @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,700;0,900;1,700&display=swap');
     body { background-color: #121212; color: #ffffff; font-family: 'Roboto', sans-serif; text-align: center; margin: 0; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
     h1 { font-weight: 900; font-style: italic; letter-spacing: 2px; margin-bottom: 25px; }
-    .box { background-color: #1e1e1e; padding: 20px; border-radius: 8px; border: 1px solid #333; width: 100%; max-width: 340px; box-sizing: border-box; text-align: left; font-size: 15px; line-height: 1.8; margin-bottom: 25px; font-weight: 700; }
+    .box { background-color: #1e1e1e; padding: 20px; border-radius: 8px; border: 1px solid #333; width: 100%; max-width: 340px; box-sizing: border-box; text-align: left; font-size: 15px; line-height: 1.8; margin-bottom: 25px; font-weight: 700; font-variant-numeric: tabular-nums; }
     .box div { white-space: nowrap; }
     .lbl { display: inline-block; width: 85px; color: #ccc; font-style: italic; }
     .btn-container { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 340px; }
-    .btn { width: 100%; padding: 14px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 16px; font-family: 'Roboto', sans-serif; }
+    .btn { width: 100%; padding: 14px; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 16px; font-family: 'Roboto', sans-serif; transition: background-color 0.15s, transform 0.05s; }
+    .btn:hover { filter: brightness(1.15); }
+    .btn:focus-visible { outline: 2px solid #3498db; outline-offset: 2px; }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.5; pointer-events: none; }
     .btn-red { background-color: #e74c3c; color: white; }
     .btn-orange { background-color: #e67e22; color: white; }
     .footer-link { color: #888888; text-decoration: underline; font-size: 15px; margin-top: 30px; display: block; }
     .clr-g { color: #2ecc71; }
     .clr-y { color: #f1c40f; }
     .clr-r { color: #e74c3c; }
-    .val { color: #fff; }
+    .val { color: #fff; font-variant-numeric: tabular-nums; }
   </style>
   <script>
     function updateClientTime() {
@@ -278,7 +287,7 @@ const char RUN_HTML[] PROGMEM = R"rawliteral(
       if(confirm(msg)) {
         fetch(url, {method: 'POST'}).then(() => {
           if(url === '/reset') {
-            setTimeout(() => { window.location.href = "/setup"; }, 3500);
+            setTimeout(() => { window.location.href = "http://192.168.4.1/setup"; }, 3500);
           } else {
             setTimeout(() => { location.reload(); }, 3500);
           }
@@ -354,16 +363,14 @@ void DMXCoreTask(void *pvParameters) {
     }
     Serial2.flush();
 
-    // 4. Kompensasi Waktu Presisi Tingkat Mikrosekon
+    // 4. Kompensasi Waktu Presisi & Watchdog Feeder
     int64_t elapsed_us = (int64_t)(esp_timer_get_time() - frame_start_us);
     int64_t wait_us = (int64_t)DMX_PERIOD_US - elapsed_us;
 
-    if (wait_us > 2000) {
-      vTaskDelay(pdMS_TO_TICKS(wait_us / 1000 - 1));
-    }
-    while ((int64_t)(esp_timer_get_time() - frame_start_us) < (int64_t)DMX_PERIOD_US) {
-      delayMicroseconds(10);
-      taskYIELD();
+    if (wait_us > 1500) {
+      vTaskDelay(pdMS_TO_TICKS(wait_us / 1000));
+    } else {
+      vTaskDelay(1); // Wajib: 1-tick yield agar IDLE0 task mereset Task Watchdog (TWDT)
     }
   }
 }
@@ -386,8 +393,11 @@ void setup() {
 
   memset(dmx_buf_pool, 0, sizeof(dmx_buf_pool));
 
-  // Buat DMX Engine pada Core 0 dengan prioritas tinggi (Priority 10)
+  // Buat DMX Engine pada Core 0 dengan prioritas tinggi
   xTaskCreatePinnedToCore(DMXCoreTask, "DMX_T", 4096, NULL, 10, &DMXTaskHandle, 0);
+
+  // Daftarkan rute WebServer satu kali secara terpusat (mencegah route duplication)
+  registerWebRoutes();
 
   prefs.begin("wifi_data", false); // Buka read-write (auto-create jika namespace baru)
   ssid = prefs.getString("ssid", "");
@@ -451,15 +461,6 @@ void loop() {
         // Validasi Protocol Version (Harus >= 14)
         uint16_t protVer = ((uint16_t)packetBuffer[10] << 8) | packetBuffer[11];
         if (protVer < ARTNET_PROT_VER) continue;
-
-        // Validasi Sequence Number (Byte 12)
-        uint8_t sequence = packetBuffer[12];
-        if (sequence != 0) {
-          if (last_artnet_seq != 0 && (int8_t)(sequence - last_artnet_seq) <= 0) {
-            continue; // Drop out-of-order frame
-          }
-          last_artnet_seq = sequence;
-        }
 
         // Ekstraksi 15-Bit Port-Address Lengkap (Net & SubUni)
         // Byte 14: SubUni (Bits 0..3 Universe, Bits 4..7 Sub-Net)
@@ -526,18 +527,16 @@ void loop() {
       }
     }
   } else if (currentState == S_AP_MODE && ssid != "") {
-    // SAGA BACKGROUND RECOVERY: Coba sambung kembali ke router panggung setiap 15 detik
-    if (millis() - lastAPBackgroundScan > 15000) {
+    // SAGA BACKGROUND RECOVERY: Cek status koneksi pada setiap loop
+    if (WiFi.status() == WL_CONNECTED) {
+      dnsServer.stop();
+      WiFi.mode(WIFI_STA);
+      Udp.stop();
+      Udp.begin(ARTNET_PORT);
+      setScreenState(S_RUN);
+    } else if (millis() - lastAPBackgroundScan > 15000) {
       lastAPBackgroundScan = millis();
       WiFi.begin(ssid.c_str(), pass.c_str());
-      if (WiFi.status() == WL_CONNECTED) {
-        dnsServer.stop();
-        Udp.stop();
-        WiFi.mode(WIFI_STA);
-        Udp.begin(ARTNET_PORT);
-        setupRunServer();
-        setScreenState(S_RUN);
-      }
     }
   }
 
@@ -556,15 +555,17 @@ void loop() {
   }
 }
 
-// --- PENGIRIMAN ARTOLLREPLY (OPCODE 0x2100) UNTUK AUTO-DISCOVERY ---
+// --- PENGIRIMAN ARTOLLREPLY (OPCODE 0x2100) SESUAI SPESIFIKASI ART-NET 4 ---
 void sendArtPollReply(IPAddress remoteIP, uint16_t remotePort) {
   uint8_t reply[239];
   memset(reply, 0, sizeof(reply));
 
+  // 1. Header & OpCode (0x2100 Little-Endian)
   memcpy(reply, ARTNET_HEADER_TAG, 8);
-  reply[8]  = 0x00; // OpCode 0x2100 Little-Endian
+  reply[8]  = 0x00;
   reply[9]  = 0x21;
 
+  // 2. IP Address & Port (6454 Little-Endian)
   IPAddress myIP = (currentState == S_RUN) ? WiFi.localIP() : WiFi.softAPIP();
   reply[10] = myIP[0];
   reply[11] = myIP[1];
@@ -573,35 +574,49 @@ void sendArtPollReply(IPAddress remoteIP, uint16_t remotePort) {
   reply[14] = (uint8_t)(ARTNET_PORT & 0xFF);
   reply[15] = (uint8_t)(ARTNET_PORT >> 8);
 
-  reply[16] = 0x05; // Versi Firmware 5.1
-  reply[17] = 0x01;
+  // 3. VersInfo (Firmware v5.2) & Port-Address Switch
+  reply[16] = 0x05;
+  reply[17] = 0x02;
   reply[18] = (uint8_t)((TARGET_PORT_ADDRESS >> 8) & 0x7F); // NetSwitch
   reply[19] = (uint8_t)((TARGET_PORT_ADDRESS >> 4) & 0x0F); // SubSwitch
 
-  reply[20] = 0x00; // Oem code
-  reply[21] = 0xFF;
+  reply[20] = 0x00; // OemHi
+  reply[21] = 0xFF; // OemLo
   reply[22] = 0x00; // Ubea
-  reply[23] = 0x08; // Status1: Indicator Normal
+  reply[23] = 0x08; // Status1: Normal Indicator
 
   // ESTA Manufacturer Code (0x7FF0 Prototype)
   reply[24] = 0xF0;
   reply[25] = 0x7F;
 
+  // ShortName (18B null-terminated) & LongName (64B null-terminated)
   strncpy((char*)&reply[26], "ZZLIGHT NODE", 17);
   strncpy((char*)&reply[44], "ZZLIGHT Art-Net to DMX512 ESP32 Module", 63);
 
-  reply[172] = 0x01; // NumPorts = 1 Port Output
-  reply[173] = 0x80; // PortTypes[0]: Output DMX512
-  reply[181] = 0x80; // GoodOutput[0]: Data transmitting
-  reply[189] = (uint8_t)(TARGET_PORT_ADDRESS & 0x0F); // SwOut[0]: Universe
+  // NodeReport (64B: Byte 108..171)
+  strncpy((char*)&reply[108], "#0001 [0000] ZZLIGHT DMX OK", 63);
 
+  // Port Configuration (Resmi Art-Net 4 Spec Table):
+  reply[172] = 0x00; // NumPortsHi
+  reply[173] = 0x01; // NumPortsLo = 1 Port
+  reply[174] = 0x80; // PortTypes[0]: Output DMX512 (Bit 7 = Output, Bits 0..5 = DMX512)
+  reply[182] = 0x80; // GoodOutput[0]: Data transmitting
+  reply[190] = (uint8_t)(TARGET_PORT_ADDRESS & 0x0F); // SwOut[0]: Universe (0)
+
+  reply[200] = 0x02; // Style: StNode
+
+  // MAC Address (Byte 201..206) & BindIp (Byte 207..210)
   uint8_t mac[6];
   WiFi.macAddress(mac);
   memcpy(&reply[201], mac, 6);
+  reply[207] = myIP[0];
+  reply[208] = myIP[1];
+  reply[209] = myIP[2];
+  reply[210] = myIP[3];
+  reply[211] = 0x01; // BindIndex
+  reply[212] = 0x08; // Status2: 15-bit Port-Address support
 
-  reply[212] = 0x02; // Style: StNode
-
-  // Art-Net 4 spec: Balasan ArtPollReply wajib dikirimkan ke Art-Net port (6454)
+  // Kirim balasan ke Art-Net Port resmi (6454)
   Udp.beginPacket(remoteIP, ARTNET_PORT);
   Udp.write(reply, sizeof(reply));
   Udp.endPacket();
@@ -612,7 +627,7 @@ String escapeJsonString(const String& input) {
   String output = "";
   output.reserve(input.length() + 8);
   for (size_t i = 0; i < input.length(); i++) {
-    char c = input[i];
+    uint8_t c = (uint8_t)input[i];
     if (c == '"') output += "\\\"";
     else if (c == '\\') output += "\\\\";
     else if (c == '\b') output += "\\b";
@@ -622,10 +637,10 @@ String escapeJsonString(const String& input) {
     else if (c == '\t') output += "\\t";
     else if (c < 32) {
       char buf[8];
-      snprintf(buf, sizeof(buf), "\\u%04x", c);
+      snprintf(buf, sizeof(buf), "\\u%04x", (unsigned int)c);
       output += buf;
     } else {
-      output += c;
+      output += (char)c;
     }
   }
   return output;
@@ -643,7 +658,6 @@ void startAP() {
   Udp.stop();
   Udp.begin(ARTNET_PORT);
 
-  setupAPServer();
   server.begin();
   setScreenState(S_AP_MODE);
 }
@@ -669,7 +683,6 @@ void connectWiFi() {
     Udp.stop();
     Udp.begin(ARTNET_PORT);
 
-    setupRunServer();
     server.begin();
     setScreenState(S_RUN);
   } else {
@@ -678,11 +691,15 @@ void connectWiFi() {
   }
 }
 
-// --- WEBSERVER ROUTING (AP MODE) ---
-void setupAPServer() {
+// --- REGISTRASI RUTE WEBSERVER TUNGGAL (STATE-AWARE ROUTING) ---
+void registerWebRoutes() {
   server.onNotFound([]() {
-    server.sendHeader("Location", "http://192.168.4.1/setup", true);
-    server.send(302, "text/plain", "");
+    if (currentState == S_AP_MODE) {
+      server.sendHeader("Location", "http://192.168.4.1/setup", true);
+      server.send(302, "text/plain", "");
+    } else {
+      server.send(404, "text/plain", "Not Found");
+    }
   });
 
   server.on("/generate_204", HTTP_GET, []() {
@@ -696,8 +713,12 @@ void setupAPServer() {
   });
 
   server.on("/", HTTP_GET, []() {
-    server.sendHeader("Location", "http://192.168.4.1/setup", true);
-    server.send(302, "text/plain", "");
+    server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    if (currentState == S_AP_MODE) {
+      server.send(200, "text/html", AP_HTML);
+    } else {
+      server.send(200, "text/html", RUN_HTML);
+    }
   });
 
   server.on("/setup", HTTP_GET, []() {
@@ -714,21 +735,39 @@ void setupAPServer() {
     unsigned long dmxDelta = millis() - lastArtNetTime;
     String dmxStat = (!hasReceivedFirstPacket) ? "No Signal" : ((dmxDelta < 1000) ? "Active" : ((dmxDelta < 10000) ? "No Signal" : "Loss Signal"));
 
-    char json[256];
-    snprintf(json, sizeof(json),
-      "{\"ip\":\"%s\",\"wifi\":\"%s\",\"status\":\"Connected\",\"mode\":\"AP\","
-      "\"stations\":%d,\"rx_count\":%u,\"dmx\":\"%s\"}",
-      WiFi.softAPIP().toString().c_str(),
-      escapeJsonString(WiFi.softAPSSID()).c_str(),
-      WiFi.softAPgetStationNum(),
-      artnet_rx_count,
-      dmxStat.c_str()
-    );
+    char json[512];
+    if (currentState == S_AP_MODE) {
+      snprintf(json, sizeof(json),
+        "{\"ip\":\"%s\",\"wifi\":\"%s\",\"status\":\"Connected\",\"mode\":\"AP\","
+        "\"stations\":%d,\"rx_count\":%u,\"dmx\":\"%s\"}",
+        WiFi.softAPIP().toString().c_str(),
+        escapeJsonString(WiFi.softAPSSID()).c_str(),
+        WiFi.softAPgetStationNum(),
+        artnet_rx_count,
+        dmxStat.c_str()
+      );
+    } else {
+      snprintf(json, sizeof(json),
+        "{\"ip\":\"%s\",\"wifi\":\"%s\",\"status\":\"%s\",\"mode\":\"RUN\","
+        "\"rssi\":%d,\"rx_count\":%u,\"dmx\":\"%s\"}",
+        WiFi.localIP().toString().c_str(),
+        escapeJsonString(WiFi.SSID()).c_str(),
+        WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected",
+        WiFi.RSSI(),
+        artnet_rx_count,
+        dmxStat.c_str()
+      );
+    }
     server.sendHeader("Access-Control-Allow-Origin", "*");
     server.send(200, "application/json", json);
   });
 
   server.on("/scan", HTTP_GET, []() {
+    // PROTEKSI LIVE SHOW: Blokir Scan WiFi di RUN Mode agar tidak terjadi Radio Channel-Hopping Blackout
+    if (currentState == S_RUN) {
+      server.send(403, "application/json", "{\"error\":\"WiFi scan is disabled during live RUN mode to prevent DMX blackout.\"}");
+      return;
+    }
     WiFi.scanDelete();
     int n = WiFi.scanNetworks(false, true);
     String json = "[";
@@ -740,6 +779,7 @@ void setupAPServer() {
       json += "{\"ssid\":\"" + escapeJsonString(WiFi.SSID(i)) + "\",\"sec\":" + String(secure ? "true" : "false") + ",\"sig\":" + String(quality) + "}";
     }
     json += "]";
+    server.sendHeader("Access-Control-Allow-Origin", "*");
     server.send(200, "application/json", json);
   });
 
@@ -763,63 +803,6 @@ void setupAPServer() {
     server.send(200, "text/html", SAVED_HTML);
     delay(500);
     ESP.restart();
-  });
-
-  server.on("/reset", HTTP_POST, []() {
-    server.send(200, "text/plain", "OK");
-    prefs.begin("wifi_data", false);
-    prefs.clear();
-    prefs.end();
-    delay(500);
-    ESP.restart();
-  });
-
-  server.on("/reboot", HTTP_POST, []() {
-    server.send(200, "text/plain", "OK");
-    delay(500);
-    ESP.restart();
-  });
-}
-
-// --- WEBSERVER ROUTING (RUN MODE) ---
-void setupRunServer() {
-  server.on("/", HTTP_GET, []() {
-    server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-    server.send(200, "text/html", RUN_HTML);
-  });
-
-  server.on("/monitor", HTTP_GET, []() {
-    server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-    server.send(200, "text/html", RUN_HTML);
-  });
-
-  server.on("/setup", HTTP_GET, []() {
-    server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-    server.send(200, "text/html", AP_HTML);
-  });
-
-  server.on("/status", HTTP_GET, []() {
-    unsigned long dmxDelta = millis() - lastArtNetTime;
-    String dmxStat = (!hasReceivedFirstPacket) ? "No Signal" : ((dmxDelta < 1000) ? "Active" : ((dmxDelta < 10000) ? "No Signal" : "Loss Signal"));
-
-    char json[256];
-    snprintf(json, sizeof(json),
-      "{\"ip\":\"%s\",\"wifi\":\"%s\",\"status\":\"%s\",\"mode\":\"RUN\","
-      "\"rssi\":%d,\"rx_count\":%u,\"dmx\":\"%s\"}",
-      WiFi.localIP().toString().c_str(),
-      escapeJsonString(WiFi.SSID()).c_str(),
-      WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected",
-      WiFi.RSSI(),
-      artnet_rx_count,
-      dmxStat.c_str()
-    );
-    server.sendHeader("Access-Control-Allow-Origin", "*");
-    server.send(200, "application/json", json);
-  });
-
-  // PROTEKSI LIVE SHOW: Blokir Scan WiFi di RUN Mode agar tidak terjadi Radio Channel-Hopping Blackout
-  server.on("/scan", HTTP_GET, []() {
-    server.send(403, "application/json", "{\"error\":\"WiFi scan is disabled during live RUN mode to prevent DMX blackout.\"}");
   });
 
   server.on("/reset", HTTP_POST, []() {
