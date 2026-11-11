@@ -169,6 +169,17 @@ const char AP_HTML[] PROGMEM = R"rawliteral(
         });
       }).catch(() => { wb.innerHTML = '<div style="padding:20px;color:#e74c3c;">Scan failed</div>'; });
     }
+    function togglePass() {
+      let p = document.getElementById('pass');
+      let b = document.getElementById('btnTogglePass');
+      if (p.type === 'password') {
+        p.type = 'text';
+        b.textContent = 'HIDE';
+      } else {
+        p.type = 'password';
+        b.textContent = 'SHOW';
+      }
+    }
     window.onload = scan;
   </script>
 </head>
@@ -178,9 +189,12 @@ const char AP_HTML[] PROGMEM = R"rawliteral(
     <div id="wb" class="wifi-box"></div>
     <button type="button" class="btn-refresh" onclick="scan()">Refresh</button>
     <form action="/connect" method="POST">
-      <input type="text" name="ssid" id="ssid" placeholder="SSID (Max 32 Karakter)" maxlength="32" required>
-      <input type="password" name="pass" id="pass" placeholder="Password (Max 63 Karakter)" maxlength="63">
-      <button type="submit" class="btn-connect">Connect</button>
+      <input type="text" name="ssid" id="ssid" placeholder="SSID (Max 32 Characters)" maxlength="32" required>
+      <div style="position:relative;width:100%;margin-bottom:12px;">
+        <input type="password" name="pass" id="pass" placeholder="Password (Max 63 Characters)" maxlength="63" style="box-sizing:border-box;width:100%;margin-bottom:0;padding-right:68px;">
+        <button type="button" id="btnTogglePass" onclick="togglePass()" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:#2a2a2a;color:#fff;border:1px solid #444;border-radius:4px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:0.5px;">SHOW</button>
+      </div>
+      <button type="submit" class="btn-connect">Connect & Reboot</button>
     </form>
     <a href="/monitor" class="footer-link">Monitor</a>
   </div>
@@ -242,8 +256,8 @@ const char RUN_HTML[] PROGMEM = R"rawliteral(
   <script>
     function updateClientTime() {
       const now = new Date();
-      const days = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
-      const months = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+      const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+      const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
       document.getElementById('dt-val').textContent = `${days[now.getDay()]}, ${now.getDate().toString().padStart(2, '0')} ${months[now.getMonth()]} ${now.getFullYear()}`;
       document.getElementById('tm-val').textContent = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
     }
@@ -275,7 +289,7 @@ const char RUN_HTML[] PROGMEM = R"rawliteral(
         let dxElem = document.getElementById('dx-val');
         dxElem.textContent = d.dmx;
         dxElem.className = d.dmx === "Active" ? "clr-g" : (d.dmx === "No Signal" ? "clr-y" : "clr-r");
-        document.getElementById('rx-val').textContent = `${d.rx_count} paket`;
+        document.getElementById('rx-val').textContent = `${d.rx_count} packets`;
       }).catch(e => console.log(e));
     }
 
@@ -287,7 +301,7 @@ const char RUN_HTML[] PROGMEM = R"rawliteral(
       if(confirm(msg)) {
         fetch(url, {method: 'POST'}).then(() => {
           if(url === '/reset') {
-            setTimeout(() => { window.location.href = "http://192.168.4.1/setup"; }, 3500);
+            setTimeout(() => { window.location.href = "/setup"; }, 3500);
           } else {
             setTimeout(() => { location.reload(); }, 3500);
           }
@@ -303,7 +317,7 @@ const char RUN_HTML[] PROGMEM = R"rawliteral(
     <div><span class="lbl">Date</span>: <span id="dt-val" class="val">Loading...</span></div>
     <div><span class="lbl">Time</span>: <span id="tm-val" class="val">Loading...</span></div>
     <div><span class="lbl">IP</span>: <span id="ip-val" class="val">Loading...</span></div>
-    <div><span class="lbl">Wifi</span>: <span id="wf-val" class="val">Loading...</span></div>
+    <div><span class="lbl">WiFi</span>: <span id="wf-val" class="val">Loading...</span></div>
     <div><span class="lbl">Status</span>: <span id="st-val" class="val">Loading...</span></div>
     <div><span class="lbl">Strength</span>: <span id="sg-val" class="val">Loading...</span></div>
     <div><span class="lbl">DMX</span>: <span id="dx-val" class="val">Loading...</span></div>
@@ -311,11 +325,11 @@ const char RUN_HTML[] PROGMEM = R"rawliteral(
   </div>
 
   <div class="btn-container">
-    <button id="btn-reset" class="btn btn-red" onclick="req('/reset', 'Reset Konfigurasi WiFi?')">WiFi Reset</button>
-    <button class="btn btn-orange" onclick="req('/reboot', 'Reboot Modul?')">Module Reboot</button>
+    <button id="btn-reset" class="btn btn-red" onclick="req('/reset', 'Reset WiFi configuration and reboot module?')">WiFi Reset</button>
+    <button class="btn btn-orange" onclick="req('/reboot', 'Reboot hardware module?')">Module Reboot</button>
   </div>
 
-  <a href="/setup" id="setupLink" class="footer-link" style="display: none;">Setup Jaringan</a>
+  <a href="/setup" id="setupLink" class="footer-link" style="display: none;">Network Setup</a>
 </body>
 </html>
 )rawliteral";
@@ -842,11 +856,20 @@ void setScreenState(ScreenState newState, unsigned long holdDuration, ScreenStat
       lcd.setCursor(0, 1); lcd.print("Switching AP... ");
       break;
     case S_AP_MODE:
-      lcd.setCursor(0, 0); lcd.print("ARTNET-DMX [AP] ");
-      lcd.setCursor(0, 1); lcd.print("192.168.4.1     ");
+      animStep = 0;
+      lastAnimTime = millis();
+      lcd.setCursor(0, 0); lcd.print("ARTNET-DMX      ");
+      lcd.setCursor(0, 1);
+      if (connectedDevices > 0) {
+        lcd.print("Dev Connected!  ");
+      } else {
+        lcd.print("192.168.4.1     ");
+      }
       break;
     case S_RUN:
-      lcd.setCursor(0, 0); lcd.print("ARTNET-DMX [RUN]");
+      animStep = 0;
+      lastAnimTime = millis();
+      lcd.setCursor(0, 0); lcd.print("ARTNET-DMX      ");
       lcd.setCursor(0, 1);
       {
         String ipStr = WiFi.localIP().toString();
@@ -890,18 +913,22 @@ void handleLCDAnimation() {
     }
   }
 
-  // Animasi Berjalan
+  // Wave Animations: S_RUN (>>>>>) and S_AP_MODE ())))))
   if (currentState == S_RUN || currentState == S_AP_MODE) {
     if (millis() - lastAnimTime > 500) {
       lastAnimTime = millis();
-      animStep = (animStep + 1) % 6;
+      animStep++;
+      if (animStep > 5) animStep = 0;
 
-      lcd.setCursor(15, 0);
-      char animChar = (currentState == S_AP_MODE) ? '*' : '>';
-      if (animStep % 2 == 0) {
-        lcd.print(animChar);
+      lcd.setCursor(10, 0);
+      char animChar = (currentState == S_AP_MODE) ? ')' : '>';
+
+      if (animStep == 0) {
+        lcd.print("      ");
       } else {
         lcd.print(" ");
+        for (int i = 1; i <= animStep; i++) lcd.print(animChar);
+        for (int i = animStep + 1; i <= 5; i++) lcd.print(" ");
       }
     }
   }
