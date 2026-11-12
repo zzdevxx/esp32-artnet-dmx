@@ -113,240 +113,42 @@ const char AP_HTML[] PROGMEM = R"rawliteral(
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ARTNET-DMX Setup</title>
   <style>
-    /* Obsidian Control Deck palette (aligned with zzluxora-v10 DESIGN.md tokens) */
-    :root {
-      --bg-root: #1e2024;
-      --bg-surface: #242830;
-      --bg-elevated: #2d323c;
-      --surface-void: #07080a;
-      --surface-input: #181a1f;
-      --surface-hover: #383f4d;
-      --border-subtle: #333844;
-      --border-strong: #4a5264;
-      --text-primary: #ffffff;
-      --text-secondary: #cbd5e1;
-      --text-muted: #94a3b8;
-      --accent-amber: #f59e0b;
-      --accent-cyan: #06b6d4;
-      --success: #16a34a;
-      --success-text: #22c55e;
-    }
-    * { box-sizing: border-box; }
-    body {
-      background-color: var(--bg-root);
-      color: var(--text-primary);
-      font-family: "Inter", "Segoe UI", "Ubuntu", system-ui, sans-serif;
-      text-align: center;
-      margin: 0;
-      padding: 36px 16px;
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .brand {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: 22px;
-      gap: 8px;
-    }
-    .brand h1 {
-      font-family: "JetBrains Mono", "Consolas", monospace;
-      font-weight: 800;
-      letter-spacing: 3px;
-      margin: 0;
-      font-size: 22px;
-      color: var(--text-primary);
-      font-variant-numeric: tabular-nums;
-    }
-    .brand .sub {
-      font-family: "JetBrains Mono", "Consolas", monospace;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-    }
-    .brand .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-family: "JetBrains Mono", "Consolas", monospace;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      color: var(--accent-cyan);
-      background: rgba(6, 182, 212, 0.08);
-      border: 1px solid rgba(6, 182, 212, 0.35);
-      border-radius: 4px;
-      padding: 4px 10px;
-      font-variant-numeric: tabular-nums;
-    }
-    .brand .badge .dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--accent-cyan);
-      box-shadow: 0 0 6px rgba(6, 182, 212, 0.7);
-    }
-    .container { width: 100%; max-width: 360px; display: flex; flex-direction: column; align-items: center; }
-    .wifi-box {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
-      border-radius: 6px;
-      padding: 4px;
-      width: 100%;
-      max-height: 220px;
-      overflow-y: auto;
-      margin-bottom: 16px;
-    }
-    .wifi-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--border-subtle);
-      cursor: pointer;
-      transition: background-color 0.15s;
-      border-radius: 4px;
-    }
+    body { background-color: #121212; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; text-align: center; margin: 0; padding: 36px 16px; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; }
+    h1 { font-weight: 900; font-style: italic; letter-spacing: 2px; margin: 0 0 25px 0; font-size: 24px; }
+    .container { width: 100%; max-width: 360px; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; }
+    .wifi-box { background: #1a1a1a; border-radius: 8px; padding: 4px; width: 100%; max-height: 220px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.08); box-sizing: border-box; margin-bottom: 16px; }
+    .wifi-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: background-color 0.15s; border-radius: 4px; }
     .wifi-item:last-child { border-bottom: none; }
-    .wifi-item:hover { background-color: var(--surface-hover); }
-    .w-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--text-primary);
-      min-width: 0;
-    }
-    .w-left .name {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-family: "Inter", "Segoe UI", sans-serif;
-    }
-    .wifi-icon {
-      width: 18px; height: 18px;
-      flex-shrink: 0;
-      color: var(--text-secondary);
-    }
-    .w-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-family: "JetBrains Mono", "Consolas", monospace;
-      font-size: 13px;
-      color: var(--text-secondary);
-      font-variant-numeric: tabular-nums;
-      flex-shrink: 0;
-    }
-    .lock-icon { width: 14px; height: 14px; color: var(--text-muted); }
-    .lock-icon.open { color: var(--text-muted); }
-    .btn {
-      width: 100%;
-      padding: 14px;
-      border: 1px solid transparent;
-      border-radius: 4px;
-      font-weight: 700;
-      font-size: 14px;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      cursor: pointer;
-      font-family: "JetBrains Mono", "Consolas", monospace;
-      transition: filter 0.15s, transform 0.05s, background-color 0.15s;
-      display: block;
-      min-height: 48px;
-    }
-    .btn:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 2px; }
+    .wifi-item:hover { background-color: rgba(255,255,255,0.06); }
+    .w-left { font-size: 14px; display: flex; align-items: center; gap: 10px; font-weight: 500; }
+    .w-right { font-size: 13px; color: #888888; display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
+    .btn { width: 100%; padding: 14px; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 15px; font-family: inherit; transition: filter 0.15s, transform 0.05s; box-sizing: border-box; display: block; letter-spacing: 0.3px; min-height: 48px; }
+    .btn:hover { filter: brightness(1.15); }
+    .btn:focus-visible { outline: 2px solid #3498db; outline-offset: 2px; }
     .btn:active { transform: scale(0.98); }
-    .btn:disabled { opacity: 0.4; pointer-events: none; }
-    .btn-amber { background: var(--accent-amber); color: #000; }
-    .btn-amber:hover { filter: brightness(1.08); }
-    .btn-green { background: var(--success); color: #fff; }
-    .btn-green:hover { filter: brightness(1.08); }
+    .btn:disabled { opacity: 0.5; pointer-events: none; }
+    .btn-orange { background-color: #d97706; color: white; }
+    .btn-green { background-color: #16a34a; color: white; }
     form { width: 100%; }
-    input[type="text"], input[type="password"] {
-      background-color: var(--surface-input);
-      color: var(--text-primary);
-      padding: 14px 16px;
-      margin-bottom: 12px;
-      width: 100%;
-      border-radius: 4px;
-      border: 1px solid var(--border-subtle);
-      font-size: 14px;
-      font-family: "Inter", "Segoe UI", sans-serif;
-      text-align: left;
-    }
-    input[type="text"]:focus, input[type="password"]:focus {
-      outline: none;
-      border-color: var(--accent-cyan);
-      box-shadow: 0 0 0 1px var(--accent-cyan);
-    }
-    input::placeholder { color: var(--text-muted); font-size: 13px; }
-    .pass-row {
-      position: relative;
-      width: 100%;
-      margin-bottom: 12px;
-      display: flex;
-    }
-    .pass-row input {
-      flex: 1;
-      margin-bottom: 0;
-      padding-right: 72px;
-      border-radius: 4px;
-    }
-    .btn-toggle {
-      position: absolute;
-      right: 8px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: var(--surface-hover);
-      color: var(--text-secondary);
-      border: 1px solid var(--border-subtle);
-      border-radius: 4px;
-      padding: 6px 10px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      cursor: pointer;
-      font-family: "JetBrains Mono", "Consolas", monospace;
-      transition: all 0.15s;
-    }
-    .btn-toggle:hover { color: var(--text-primary); background: var(--border-subtle); }
-    .btn-toggle:focus-visible { outline: 2px solid var(--accent-cyan); }
+    input[type="text"], input[type="password"] { background-color: #1a1a1a; color: #ffffff; padding: 14px 16px; margin-bottom: 12px; width: 100%; border-radius: 6px; border: 1px solid rgba(255,255,255,0.12); font-size: 15px; box-sizing: border-box; text-align: left; font-family: inherit; }
+    input[type="text"]:focus, input[type="password"]:focus { outline: 2px solid #3498db; border-color: transparent; }
+    input::placeholder { color: #666666; font-size: 14px; }
+    .btn-toggle { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: #262626; color: #aaaaaa; border: 1px solid #444444; border-radius: 4px; padding: 7px 11px; font-size: 11px; font-weight: 700; cursor: pointer; letter-spacing: 0.5px; transition: all 0.15s; font-family: inherit; }
+    .btn-toggle:hover { color: #ffffff; background: #333333; }
+    .btn-toggle:focus-visible { outline: 2px solid #3498db; }
     .btn-toggle:active { transform: translateY(-50%) scale(0.95); }
-    .footer-link {
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 500;
-      margin-top: 32px;
-      display: block;
-      transition: color 0.15s;
-      font-family: "Inter", "Segoe UI", sans-serif;
-    }
-    .footer-link:hover { color: var(--text-primary); }
-    .footer-link:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 2px; }
+    .footer-link { color: #888888; text-decoration: underline; font-size: 14px; margin-top: 32px; display: block; transition: color 0.15s; }
+    .footer-link:hover { color: #cccccc; }
   </style>
   <script>
-    /* Inline SVG icons (no emoji, no external assets) */
-    const WIFI_SVG = '<svg class="wifi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>';
-    const LOCK_SVG = '<svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
-    const UNLOCK_SVG = '<svg class="lock-icon open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>';
-
-    function fillSSID(el) {
-      document.getElementById('ssid').value = el.getAttribute('data-ssid');
-      document.getElementById('pass').focus();
-    }
+    function fillSSID(el) { document.getElementById('ssid').value = el.getAttribute('data-ssid'); document.getElementById('pass').focus(); }
     function scan() {
       let wb = document.getElementById('wb');
-      wb.innerHTML = '<div style="padding:24px;color:var(--text-muted);font-family:JetBrains Mono,Consolas,monospace;font-size:12px;letter-spacing:1px;">SCANNING WIFI NETWORKS...</div>';
+      wb.innerHTML = '<div style="padding:24px;color:#888;">Scanning WiFi networks...</div>';
       fetch('/scan').then(r=>r.json()).then(d=>{
         wb.innerHTML = '';
         if(d.length === 0) {
-          wb.innerHTML = '<div style="padding:24px;color:var(--text-muted);font-family:JetBrains Mono,Consolas,monospace;font-size:12px;letter-spacing:1px;">NO WIFI FOUND</div>';
+          wb.innerHTML = '<div style="padding:24px;color:#888;">No WiFi found</div>';
           return;
         }
         d.forEach(w => {
@@ -357,27 +159,20 @@ const char AP_HTML[] PROGMEM = R"rawliteral(
 
           let left = document.createElement('div');
           left.className = 'w-left';
-          left.innerHTML = WIFI_SVG;
+          left.innerHTML = '<span>📶</span> ';
           let sTxt = document.createElement('span');
-          sTxt.className = 'name';
           sTxt.textContent = w.ssid;
-          sTxt.title = w.ssid;
           left.appendChild(sTxt);
 
           let right = document.createElement('div');
           right.className = 'w-right';
-          right.innerHTML = (w.sec ? LOCK_SVG : UNLOCK_SVG);
-          let sig = document.createElement('span');
-          sig.textContent = w.sig + '%';
-          right.appendChild(sig);
+          right.textContent = (w.sec ? '🔒 ' : '🔓 ') + w.sig + '%';
 
           item.appendChild(left);
           item.appendChild(right);
           wb.appendChild(item);
         });
-      }).catch(() => {
-        wb.innerHTML = '<div style="padding:24px;color:var(--accent-amber);font-family:JetBrains Mono,Consolas,monospace;font-size:12px;letter-spacing:1px;">SCAN FAILED</div>';
-      });
+      }).catch(() => { wb.innerHTML = '<div style="padding:24px;color:#ef4444;">Scan failed</div>'; });
     }
     function togglePass() {
       let p = document.getElementById('pass');
@@ -394,21 +189,17 @@ const char AP_HTML[] PROGMEM = R"rawliteral(
   </script>
 </head>
 <body>
-  <div class="brand">
-    <h1>ZZLIGHT</h1>
-    <span class="sub">ARTNET-DMX NODE CONTROLLER</span>
-    <span class="badge"><span class="dot"></span> UNIVERSE 0 | 43.07 FPS</span>
-  </div>
   <div class="container">
+    <h1>ZZLIGHT PROJECT</h1>
     <div id="wb" class="wifi-box"></div>
-    <button type="button" class="btn btn-amber" style="margin-bottom: 20px;" onclick="scan()">Refresh Networks</button>
+    <button type="button" class="btn btn-orange" style="margin-bottom: 20px;" onclick="scan()">Refresh Networks</button>
     <form action="/connect" method="POST">
-      <input type="text" name="ssid" id="ssid" placeholder="SSID (Max 32 Characters)" maxlength="32" required autocomplete="off">
-      <div class="pass-row">
-        <input type="password" name="pass" id="pass" placeholder="Password (Max 63 Characters)" maxlength="63" autocomplete="new-password">
+      <input type="text" name="ssid" id="ssid" placeholder="SSID (Max 32 Characters)" maxlength="32" required>
+      <div style="position:relative;width:100%;margin-bottom:12px;">
+        <input type="password" name="pass" id="pass" placeholder="Password (Max 63 Characters)" maxlength="63" style="box-sizing:border-box;width:100%;margin-bottom:0;padding-right:72px;">
         <button type="button" id="btnTogglePass" class="btn-toggle" onclick="togglePass()">SHOW</button>
       </div>
-      <button type="submit" class="btn btn-green" style="margin-top: 12px;">Connect & Reboot</button>
+      <button type="submit" class="btn btn-green">Connect & Reboot</button>
     </form>
     <a href="/monitor" class="footer-link">Live Monitor</a>
   </div>
@@ -425,111 +216,19 @@ const char SAVED_HTML[] PROGMEM = R"rawliteral(
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ARTNET-DMX Connect</title>
   <style>
-    :root {
-      --bg-root: #1e2024;
-      --bg-surface: #242830;
-      --border-subtle: #333844;
-      --text-primary: #ffffff;
-      --text-secondary: #cbd5e1;
-      --text-muted: #94a3b8;
-      --success-text: #22c55e;
-      --success-bg: #143521;
-      --success-border: #166534;
-    }
-    * { box-sizing: border-box; }
-    body {
-      background-color: var(--bg-root);
-      color: var(--text-primary);
-      font-family: "Inter", "Segoe UI", "Ubuntu", system-ui, sans-serif;
-      text-align: center;
-      margin: 0;
-      padding: 40px 16px;
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-    .container { width: 100%; max-width: 360px; }
-    .card {
-      background-color: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
-      padding: 40px 24px;
-      border-radius: 6px;
-    }
-    .card .title {
-      font-family: "JetBrains Mono", "Consolas", monospace;
-      font-weight: 800;
-      letter-spacing: 3px;
-      font-size: 16px;
-      color: var(--text-primary);
-      margin: 0 0 6px 0;
-    }
-    .card .subtitle {
-      font-family: "JetBrains Mono", "Consolas", monospace;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      margin-bottom: 28px;
-    }
-    .checkmark {
-      width: 64px;
-      height: 64px;
-      margin: 0 auto 20px;
-      background: var(--success-bg);
-      border: 1px solid var(--success-border);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .checkmark svg {
-      width: 32px;
-      height: 32px;
-      color: var(--success-text);
-    }
-    .status {
-      font-family: "JetBrains Mono", "Consolas", monospace;
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      color: var(--success-text);
-      margin-bottom: 10px;
-    }
-    .note {
-      font-family: "Inter", "Segoe UI", sans-serif;
-      font-size: 13px;
-      color: var(--text-muted);
-      margin: 0;
-    }
-    .dot-pulse {
-      display: inline-block;
-      width: 6px;
-      height: 6px;
-      background: var(--success-text);
-      border-radius: 50%;
-      margin-right: 6px;
-      animation: pulse 1.2s ease-in-out infinite;
-      vertical-align: middle;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 0.3; }
-      50% { opacity: 1; }
-    }
+    body { background-color: #121212; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; text-align: center; margin: 0; padding: 40px 16px; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; }
+    h1 { font-weight: 900; font-style: italic; letter-spacing: 2px; margin: 0 0 16px 0; font-size: 24px; }
+    .container { width: 100%; max-width: 360px; box-sizing: border-box; }
+    .card { background-color: #1a1a1a; padding: 36px 20px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); box-sizing: border-box; }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="card">
-      <div class="title">ZZLIGHT</div>
-      <div class="subtitle">ARTNET-DMX NODE CONTROLLER</div>
-      <div class="checkmark">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-      </div>
-      <div class="status"><span class="dot-pulse"></span>WIFI CREDENTIALS SAVED</div>
-      <p class="note">Applying network settings and rebooting module...</p>
+      <h1>ZZLIGHT PROJECT</h1>
+      <div style="color: #22c55e; font-size: 32px; line-height: 1; margin-bottom: 14px;">✓</div>
+      <div style="color: #f3f4f6; font-size: 16px; font-weight: 700;">WiFi Credentials Saved</div>
+      <div style="color: #888888; font-size: 13px; margin-top: 8px;">Applying network settings and rebooting...</div>
     </div>
   </div>
 </body>
@@ -545,207 +244,29 @@ const char RUN_HTML[] PROGMEM = R"rawliteral(
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ARTNET-DMX Monitor</title>
   <style>
-    :root {
-      --bg-root: #1e2024;
-      --bg-surface: #242830;
-      --bg-elevated: #2d323c;
-      --surface-void: #07080a;
-      --surface-input: #181a1f;
-      --surface-hover: #383f4d;
-      --border-subtle: #333844;
-      --border-strong: #4a5264;
-      --text-primary: #ffffff;
-      --text-secondary: #cbd5e1;
-      --text-muted: #94a3b8;
-      --accent-amber: #f59e0b;
-      --accent-cyan: #06b6d4;
-      --success: #16a34a;
-      --success-text: #22c55e;
-      --success-bg: #143521;
-      --success-border: #166534;
-      --danger: #ef4444;
-      --danger-bg: #3b1818;
-      --danger-border: #991b1b;
-      --warning: #eab308;
-      --warning-bg: #2b2510;
-      --warning-border: #7a5c00;
-    }
-    * { box-sizing: border-box; }
-    body {
-      background-color: var(--bg-root);
-      color: var(--text-primary);
-      font-family: "Inter", "Segoe UI", "Ubuntu", system-ui, sans-serif;
-      text-align: center;
-      margin: 0;
-      padding: 36px 16px;
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .brand {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: 18px;
-      gap: 6px;
-    }
-    .brand h1 {
-      font-family: "JetBrains Mono", "Consolas", monospace;
-      font-weight: 800;
-      letter-spacing: 3px;
-      margin: 0;
-      font-size: 20px;
-      color: var(--text-primary);
-      font-variant-numeric: tabular-nums;
-    }
-    .telemetry-header {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      font-family: "JetBrains Mono", "Consolas", monospace;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 1.2px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      padding: 5px 12px;
-      border: 1px solid var(--border-subtle);
-      border-radius: 4px;
-      background: var(--surface-input);
-      font-variant-numeric: tabular-nums;
-    }
-    .telemetry-header .streaming-dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--success-text);
-      box-shadow: 0 0 6px rgba(34, 197, 94, 0.8);
-      animation: pulse 1.4s ease-in-out infinite;
-    }
-    .telemetry-header .sep { color: var(--border-strong); }
-    @keyframes pulse {
-      0%, 100% { opacity: 0.4; }
-      50% { opacity: 1; }
-    }
-    .container { width: 100%; max-width: 360px; display: flex; flex-direction: column; align-items: center; }
-    .box {
-      background-color: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
-      padding: 6px 18px;
-      border-radius: 6px;
-      width: 100%;
-      margin-bottom: 18px;
-      font-variant-numeric: tabular-nums;
-    }
-    .row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 11px 0;
-      border-bottom: 1px solid var(--border-subtle);
-      font-size: 13px;
-      gap: 12px;
-    }
+    body { background-color: #121212; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; text-align: center; margin: 0; padding: 36px 16px; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; }
+    h1 { font-weight: 900; font-style: italic; letter-spacing: 2px; margin: 0 0 25px 0; font-size: 24px; }
+    .container { width: 100%; max-width: 360px; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; }
+    .box { background-color: #1a1a1a; padding: 16px 20px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); width: 100%; box-sizing: border-box; margin-bottom: 20px; font-variant-numeric: tabular-nums; }
+    .row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; }
     .row:last-child { border-bottom: none; }
-    .lbl {
-      color: var(--text-muted);
-      font-weight: 600;
-      font-size: 11px;
-      letter-spacing: 0.8px;
-      font-family: "JetBrains Mono", "Consolas", monospace;
-      text-transform: uppercase;
-      flex-shrink: 0;
-    }
-    .val {
-      color: var(--text-primary);
-      font-weight: 700;
-      text-align: right;
-      font-variant-numeric: tabular-nums;
-      font-family: "JetBrains Mono", "Consolas", monospace;
-      font-size: 13px;
-      letter-spacing: 0.3px;
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    /* Status pill badges (soft-tinted, Linear/Stripe style) */
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 3px 10px;
-      border-radius: 999px;
-      font-family: "JetBrains Mono", "Consolas", monospace;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      border: 1px solid transparent;
-      font-variant-numeric: tabular-nums;
-    }
-    .pill .pdot { width: 5px; height: 5px; border-radius: 50%; }
-    .pill-green { background: var(--success-bg); color: var(--success-text); border-color: var(--success-border); }
-    .pill-green .pdot { background: var(--success-text); }
-    .pill-yellow { background: var(--warning-bg); color: var(--warning); border-color: var(--warning-border); }
-    .pill-yellow .pdot { background: var(--warning); }
-    .pill-red { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); }
-    .pill-red .pdot { background: var(--danger); }
-    .pill-neutral { background: var(--surface-input); color: var(--text-secondary); border-color: var(--border-subtle); }
-    .pill-neutral .pdot { background: var(--text-muted); }
-
-    .btn-container { display: flex; flex-direction: column; gap: 10px; width: 100%; }
-    .btn {
-      width: 100%;
-      padding: 14px;
-      border: 1px solid transparent;
-      border-radius: 4px;
-      font-weight: 700;
-      cursor: pointer;
-      font-size: 13px;
-      font-family: "JetBrains Mono", "Consolas", monospace;
-      transition: filter 0.15s, transform 0.05s;
-      display: block;
-      letter-spacing: 0.8px;
-      min-height: 48px;
-      text-transform: uppercase;
-    }
-    .btn:hover { filter: brightness(1.08); }
-    .btn:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 2px; }
+    .lbl { color: #888888; font-weight: 500; font-size: 11px; letter-spacing: 0.5px; }
+    .val { color: #f3f4f6; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+    .btn-container { display: flex; flex-direction: column; gap: 10px; width: 100%; box-sizing: border-box; }
+    .btn { width: 100%; padding: 14px; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 15px; font-family: inherit; transition: filter 0.15s, transform 0.05s; box-sizing: border-box; display: block; letter-spacing: 0.3px; min-height: 48px; }
+    .btn:hover { filter: brightness(1.15); }
+    .btn:focus-visible { outline: 2px solid #3498db; outline-offset: 2px; }
     .btn:active { transform: scale(0.98); }
     .btn:disabled { opacity: 0.5; pointer-events: none; }
-    .btn-danger { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); }
-    .btn-amber { background: var(--accent-amber); color: #000; }
-    .footer-link {
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 500;
-      margin-top: 28px;
-      display: block;
-      transition: color 0.15s;
-      font-family: "Inter", "Segoe UI", sans-serif;
-    }
-    .footer-link:hover { color: var(--text-primary); }
-    .footer-link:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 2px; }
+    .btn-red { background-color: #dc2626; color: white; }
+    .btn-orange { background-color: #d97706; color: white; }
+    .footer-link { color: #888888; text-decoration: underline; font-size: 14px; margin-top: 32px; display: block; transition: color 0.15s; }
+    .footer-link:hover { color: #cccccc; }
+    .clr-g { color: #22c55e; }
+    .clr-y { color: #eab308; }
+    .clr-r { color: #ef4444; }
   </style>
   <script>
-    /* Pill renderer: turns a plain value span into a status badge with a dot */
-    function setPill(el, text, kind) {
-      el.textContent = '';
-      el.className = 'val pill pill-' + kind;
-      let dot = document.createElement('span');
-      dot.className = 'pdot';
-      el.appendChild(dot);
-      let t = document.createElement('span');
-      t.textContent = text;
-      el.appendChild(t);
-    }
-    function setPlain(el, text, cls) {
-      el.textContent = text;
-      el.className = 'val' + (cls ? ' ' + cls : '');
-    }
-
     function updateClientTime() {
       const now = new Date();
       const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
@@ -756,35 +277,31 @@ const char RUN_HTML[] PROGMEM = R"rawliteral(
 
     function updateData() {
       fetch('/status').then(r => r.json()).then(d => {
-        setPlain(document.getElementById('ip-val'), d.ip);
-        setPlain(document.getElementById('wf-val'), d.wifi);
+        document.getElementById('ip-val').textContent = d.ip;
+        document.getElementById('wf-val').textContent = d.wifi;
 
-        if (d.status === "Connected") {
-          setPill(document.getElementById('st-val'), d.status, 'green');
-        } else {
-          setPill(document.getElementById('st-val'), d.status || 'Disconnected', 'red');
-        }
+        let stElem = document.getElementById('st-val');
+        stElem.textContent = d.status;
+        stElem.className = d.status === "Connected" ? "val clr-g" : "val clr-r";
 
         let sgElem = document.getElementById('sg-val');
         if(d.mode === "AP") {
-          setPill(sgElem, "Direct Mode", "neutral");
-          document.getElementById('btn-reset').style.display = 'none';
+           sgElem.textContent = "Direct Mode";
+           sgElem.className = "val";
+           document.getElementById('btn-reset').style.display = 'none';
         } else {
-          let dbm = parseInt(d.rssi);
-          let strTxt = dbm > -60 ? "Good" : (dbm > -80 ? "Medium" : "Weak");
-          let kind = dbm > -60 ? "green" : (dbm > -80 ? "yellow" : "red");
-          setPill(sgElem, `${dbm} dBm (${strTxt})`, kind);
-          document.getElementById('btn-reset').style.display = 'block';
+           let dbm = parseInt(d.rssi);
+           let strTxt = dbm > -60 ? "Good" : (dbm > -80 ? "Medium" : "Weak");
+           sgElem.textContent = `${dbm} dBm (${strTxt})`;
+           sgElem.className = dbm > -60 ? "val clr-g" : (dbm > -80 ? "val clr-y" : "val clr-r");
+           document.getElementById('btn-reset').style.display = 'block';
         }
 
-        let dxKind = d.dmx === "Active" ? "green" : (d.dmx === "No Signal" ? "yellow" : "red");
-        setPill(document.getElementById('dx-val'), d.dmx || 'No Signal', dxKind);
-        setPlain(document.getElementById('rx-val'), `${d.rx_count} packets`);
-
-        let streaming = (d.status === "Connected" && d.dmx === "Active");
-        document.getElementById('stream-dot').style.opacity = streaming ? "1" : "0.15";
-        document.getElementById('stream-label').textContent = streaming ? "Live" : "Standby";
-      }).catch(e => { console.log(e); });
+        let dxElem = document.getElementById('dx-val');
+        dxElem.textContent = d.dmx;
+        dxElem.className = d.dmx === "Active" ? "val clr-g" : (d.dmx === "No Signal" ? "val clr-y" : "val clr-r");
+        document.getElementById('rx-val').textContent = `${d.rx_count} packets`;
+      }).catch(e => console.log(e));
     }
 
     setInterval(updateData, 1000);
@@ -805,31 +322,23 @@ const char RUN_HTML[] PROGMEM = R"rawliteral(
   </script>
 </head>
 <body>
-  <div class="brand">
-    <h1>ZZLIGHT</h1>
-    <div class="telemetry-header">
-      <span class="streaming-dot" id="stream-dot"></span>
-      <span id="stream-label">Standby</span>
-      <span class="sep">|</span>
-      <span>Universe 0</span>
-    </div>
-  </div>
-
   <div class="container">
+    <h1>ZZLIGHT PROJECT</h1>
+
     <div class="box">
-      <div class="row"><span class="lbl">Date</span><span id="dt-val" class="val">Loading...</span></div>
-      <div class="row"><span class="lbl">Time</span><span id="tm-val" class="val">Loading...</span></div>
-      <div class="row"><span class="lbl">IP Address</span><span id="ip-val" class="val">Loading...</span></div>
-      <div class="row"><span class="lbl">WiFi SSID</span><span id="wf-val" class="val">Loading...</span></div>
-      <div class="row"><span class="lbl">Status</span><span id="st-val" class="val pill pill-neutral"><span class="pdot"></span><span>Connecting</span></span></div>
-      <div class="row"><span class="lbl">Signal</span><span id="sg-val" class="val pill pill-neutral"><span class="pdot"></span><span>&mdash;</span></span></div>
-      <div class="row"><span class="lbl">DMX Engine</span><span id="dx-val" class="val pill pill-neutral"><span class="pdot"></span><span>No Signal</span></span></div>
-      <div class="row"><span class="lbl">Received</span><span id="rx-val" class="val">Loading...</span></div>
+      <div class="row"><span class="lbl">DATE</span><span id="dt-val" class="val">Loading...</span></div>
+      <div class="row"><span class="lbl">TIME</span><span id="tm-val" class="val">Loading...</span></div>
+      <div class="row"><span class="lbl">IP ADDRESS</span><span id="ip-val" class="val">Loading...</span></div>
+      <div class="row"><span class="lbl">WIFI SSID</span><span id="wf-val" class="val">Loading...</span></div>
+      <div class="row"><span class="lbl">STATUS</span><span id="st-val" class="val">Loading...</span></div>
+      <div class="row"><span class="lbl">SIGNAL</span><span id="sg-val" class="val">Loading...</span></div>
+      <div class="row"><span class="lbl">DMX ENGINE</span><span id="dx-val" class="val">Loading...</span></div>
+      <div class="row"><span class="lbl">RECEIVED</span><span id="rx-val" class="val">Loading...</span></div>
     </div>
 
     <div class="btn-container">
-      <button id="btn-reset" class="btn btn-danger" onclick="req('/reset', 'Reset WiFi configuration and reboot module?')">WiFi Reset</button>
-      <button class="btn btn-amber" onclick="req('/reboot', 'Reboot hardware module?')">Module Reboot</button>
+      <button id="btn-reset" class="btn btn-red" onclick="req('/reset', 'Reset WiFi configuration and reboot module?')">WiFi Reset</button>
+      <button class="btn btn-orange" onclick="req('/reboot', 'Reboot hardware module?')">Module Reboot</button>
     </div>
 
     <a href="/setup" class="footer-link">Network Setup</a>

@@ -167,7 +167,7 @@ def run_tests():
         s24_page.click("button:has-text('Connect & Reboot')")
         s24_page.wait_for_selector(".card")
         saved_text = s24_page.locator(".card").text_content()
-        assert "WIFI CREDENTIALS SAVED" in saved_text.upper()
+        assert "WiFi Credentials Saved" in saved_text
         print("  ✓ Form submission renders clean Saved Confirmation Card")
         s24_saved_png = OUTPUT_DIR / "02_s24fe_saved_card.png"
         s24_page.screenshot(path=str(s24_saved_png))
