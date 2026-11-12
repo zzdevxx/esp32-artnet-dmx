@@ -125,15 +125,21 @@ const char AP_HTML[] PROGMEM = R"rawliteral(
     .wifi-item:hover { background: #2a2a2a; }
     .w-left { font-size: 15px; display: flex; align-items: center; gap: 10px; }
     .w-right { font-size: 14px; color: #aaa; display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
-    .btn-refresh { background-color: #e67e22; color: white; padding: 12px; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; font-size: 15px; font-weight: 700; cursor: pointer; width: 100%; margin-bottom: 30px; transition: 0.15s; }
-    .btn-refresh:hover { filter: brightness(1.15); }
-    .btn-refresh:active { transform: scale(0.98); }
+    .btn { width: 100%; padding: 14px; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 16px; font-family: 'Roboto', sans-serif; transition: filter 0.15s, transform 0.05s; box-sizing: border-box; display: block; }
+    .btn:hover { filter: brightness(1.15); }
+    .btn:focus-visible { outline: 2px solid #3498db; outline-offset: 2px; }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.5; pointer-events: none; }
+    .btn-orange { background-color: #e67e22; color: white; }
+    .btn-green { background-color: #2ecc71; color: white; }
     form { width: 100%; }
-    input[type="text"], input[type="password"] { background-color: #ffffff; color: #000000; padding: 14px; margin-bottom: 12px; width: 100%; border-radius: 6px; border: none; font-size: 16px; box-sizing: border-box; text-align: center; }
-    .btn-connect { background-color: #2ecc71; color: white; padding: 14px; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; font-size: 16px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 5px; transition: 0.15s; }
-    .btn-connect:hover { filter: brightness(1.15); }
-    .btn-connect:active { transform: scale(0.98); }
-    .footer-link { color: #888888; text-decoration: underline; font-size: 15px; margin-top: 40px; display: block; }
+    input[type="text"], input[type="password"] { background-color: #ffffff; color: #000000; padding: 14px; margin-bottom: 12px; width: 100%; border-radius: 6px; border: 1px solid #444; font-size: 16px; box-sizing: border-box; text-align: center; }
+    input[type="text"]:focus, input[type="password"]:focus { outline: 2px solid #3498db; outline-offset: 1px; }
+    .btn-toggle { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: #2a2a2a; color: #fff; border: 1px solid #555; border-radius: 4px; padding: 7px 11px; font-size: 11px; font-weight: 700; cursor: pointer; letter-spacing: 0.5px; transition: background-color 0.15s, transform 0.05s; }
+    .btn-toggle:hover { background: #3a3a3a; }
+    .btn-toggle:focus-visible { outline: 2px solid #3498db; }
+    .btn-toggle:active { transform: translateY(-50%) scale(0.95); }
+    .footer-link { color: #888888; text-decoration: underline; font-size: 15px; margin-top: 35px; display: block; }
   </style>
   <script>
     function fillSSID(el) { document.getElementById('ssid').value = el.getAttribute('data-ssid'); document.getElementById('pass').focus(); }
@@ -187,16 +193,16 @@ const char AP_HTML[] PROGMEM = R"rawliteral(
   <h1>ZZLIGHT PROJECT</h1>
   <div class="container">
     <div id="wb" class="wifi-box"></div>
-    <button type="button" class="btn-refresh" onclick="scan()">Refresh</button>
+    <button type="button" class="btn btn-orange" style="margin-bottom: 25px;" onclick="scan()">Refresh</button>
     <form action="/connect" method="POST">
       <input type="text" name="ssid" id="ssid" placeholder="SSID (Max 32 Characters)" maxlength="32" required>
       <div style="position:relative;width:100%;margin-bottom:12px;">
-        <input type="password" name="pass" id="pass" placeholder="Password (Max 63 Characters)" maxlength="63" style="box-sizing:border-box;width:100%;margin-bottom:0;padding-right:68px;">
-        <button type="button" id="btnTogglePass" onclick="togglePass()" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:#2a2a2a;color:#fff;border:1px solid #444;border-radius:4px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:0.5px;">SHOW</button>
+        <input type="password" name="pass" id="pass" placeholder="Password (Max 63 Characters)" maxlength="63" style="box-sizing:border-box;width:100%;margin-bottom:0;padding-right:72px;">
+        <button type="button" id="btnTogglePass" class="btn-toggle" onclick="togglePass()">SHOW</button>
       </div>
-      <button type="submit" class="btn-connect">Connect & Reboot</button>
+      <button type="submit" class="btn btn-green">Connect & Reboot</button>
     </form>
-    <a href="/monitor" class="footer-link">Monitor</a>
+    <a href="/monitor" class="footer-link">Live Monitor</a>
   </div>
 </body>
 </html>
@@ -275,14 +281,12 @@ const char RUN_HTML[] PROGMEM = R"rawliteral(
         if(d.mode === "AP") {
            sgElem.textContent = "Direct Mode";
            sgElem.className = "val";
-           document.getElementById('setupLink').style.display = 'block';
            document.getElementById('btn-reset').style.display = 'none';
         } else {
            let dbm = parseInt(d.rssi);
            let strTxt = dbm > -60 ? "Good" : (dbm > -80 ? "Medium" : "Weak");
            sgElem.textContent = `${dbm} dBm (${strTxt})`;
            sgElem.className = dbm > -60 ? "clr-g" : (dbm > -80 ? "clr-y" : "clr-r");
-           document.getElementById('setupLink').style.display = 'none';
            document.getElementById('btn-reset').style.display = 'block';
         }
 
@@ -301,7 +305,7 @@ const char RUN_HTML[] PROGMEM = R"rawliteral(
       if(confirm(msg)) {
         fetch(url, {method: 'POST'}).then(() => {
           if(url === '/reset') {
-            setTimeout(() => { window.location.href = "/setup"; }, 3500);
+            setTimeout(() => { window.location.href = "http://192.168.4.1/setup"; }, 3500);
           } else {
             setTimeout(() => { location.reload(); }, 3500);
           }
@@ -329,7 +333,7 @@ const char RUN_HTML[] PROGMEM = R"rawliteral(
     <button class="btn btn-orange" onclick="req('/reboot', 'Reboot hardware module?')">Module Reboot</button>
   </div>
 
-  <a href="/setup" id="setupLink" class="footer-link" style="display: none;">Network Setup</a>
+  <a href="/setup" class="footer-link">Network Setup</a>
 </body>
 </html>
 )rawliteral";
