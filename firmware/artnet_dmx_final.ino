@@ -815,6 +815,7 @@ void registerWebRoutes() {
     prefs.end();
 
     server.send(200, "text/html", SAVED_HTML);
+    setScreenState(S_MOD_CONN1);
     delay(500);
     ESP.restart();
   });
@@ -824,6 +825,7 @@ void registerWebRoutes() {
     prefs.begin("wifi_data", false);
     prefs.clear();
     prefs.end();
+    setScreenState(S_WIFI_RST);
     delay(500);
     ESP.restart();
   });
@@ -852,7 +854,7 @@ void setScreenState(ScreenState newState, unsigned long holdDuration, ScreenStat
       lcd.setCursor(0, 0); lcd.print("Connecting...   ");
       break;
     case S_WIFI_ERR:
-      lcd.setCursor(0, 0); lcd.print("WiFi Not Connect");
+      lcd.setCursor(0, 0); lcd.print("WiFi Not Set!   ");
       lcd.setCursor(0, 1); lcd.print("Switching AP... ");
       break;
     case S_AP_MODE:
@@ -886,8 +888,17 @@ void setScreenState(ScreenState newState, unsigned long holdDuration, ScreenStat
       lcd.setCursor(0, 1); lcd.print("Fallback to AP..");
       break;
     case S_WIFI_FAIL:
-      lcd.setCursor(0, 0); lcd.print("WiFi ConnectFail");
+      lcd.setCursor(0, 0); lcd.print("WiFi Failed!    ");
       lcd.setCursor(0, 1); lcd.print("Starting AP Mode");
+      break;
+    case S_WIFI_RST:
+      lcd.setCursor(0, 0); lcd.print("WiFi Reset!     ");
+      lcd.setCursor(0, 1); lcd.print("Rebooting...    ");
+      break;
+    case S_MOD_CONN1:
+    case S_MOD_CONN2:
+      lcd.setCursor(0, 0); lcd.print("Module Connect! ");
+      lcd.setCursor(0, 1); lcd.print("Rebooting...    ");
       break;
     default:
       break;
