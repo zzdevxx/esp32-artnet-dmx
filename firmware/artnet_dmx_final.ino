@@ -32,12 +32,12 @@
 #include <esp_timer.h>
 #include <string.h>
 
-// --- HARDWARE PIN CONFIGURATION ---
+// Hardware pin configuration
 #define DMX_TX_PIN 17
 #define DMX_RX_PIN 16
 #define DMX_EN_PIN 4
 
-// --- ART-NET 4 CONSTANTS & SPECIFICATION ---
+// Art-Net 4 protocol constants
 #define ARTNET_PORT           6454
 #define ARTNET_OP_POLL        0x2000
 #define ARTNET_OP_POLL_REPLY  0x2100
@@ -49,7 +49,7 @@
 // Net: 0 (0..127), Sub-Net: 0 (0..15), Universe: 0 (0..15) -> Total = 0x0000
 const uint16_t TARGET_PORT_ADDRESS = 0x0000;
 
-// --- LOCK-FREE TRIPLE BUFFERING ARCHITECTURE ---
+// Lock-free triple buffering architecture:
 // Buffer 0: Owned by Core 0 during physical UART DMX transmission
 // Buffer 1: Staging / Ready buffer containing the latest verified complete frame
 // Buffer 2: Owned by Core 1 during active UDP payload reception
@@ -67,7 +67,7 @@ static volatile bool hasReceivedFirstPacket = false;
 WiFiUDP Udp;
 TaskHandle_t DMXTaskHandle;
 
-// --- SYSTEM, NETWORK, & PREFERENCES VARIABLES ---
+// System, network, and persistent storage handles
 Preferences prefs;
 WebServer server(80);
 DNSServer dnsServer;
@@ -83,7 +83,7 @@ unsigned long lastReconnectAttempt = 0;
 unsigned long lastAPBackgroundScan = 0;
 int connectedDevices = 0;
 
-// --- NON-BLOCKING LCD STATE MACHINE ---
+// Non-blocking LCD state definitions
 enum ScreenState {
   S_BOOT, S_CONNECTING, S_WIFI_ERR, S_AP_MODE, S_DEV_CONN,
   S_MOD_CONN1, S_MOD_CONN2, S_RUN, S_WIFI_RST,
@@ -104,9 +104,7 @@ void DMXCoreTask(void *pvParameters);
 void sendArtPollReply(IPAddress remoteIP, uint16_t remotePort);
 String escapeJsonString(const String& input);
 
-// --- SECURE HTML TEMPLATES (PROGMEM) ---
-
-// 1. Setup Page (AP Mode)
+// Web UI templates stored in flash memory
 const char AP_HTML[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html>
@@ -115,41 +113,42 @@ const char AP_HTML[] PROGMEM = R"rawliteral(
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ARTNET-DMX Setup</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap');
-    body { background-color: #121212; color: #ffffff; font-family: 'Roboto', sans-serif; text-align: center; margin: 0; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
-    h1 { font-weight: 900; font-style: italic; letter-spacing: 2px; margin-bottom: 25px; }
-    .container { width: 100%; max-width: 340px; display: flex; flex-direction: column; align-items: center; }
-    .wifi-box { background: #1e1e1e; border-radius: 8px; padding: 5px; width: 100%; max-height: 220px; overflow-y: auto; border: 1px solid #333; box-sizing: border-box; margin-bottom: 15px; }
-    .wifi-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 10px; border-bottom: 1px solid #333; cursor: pointer; transition: 0.15s; }
+    body { background-color: #121212; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; text-align: center; margin: 0; padding: 36px 16px; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; }
+    h1 { font-weight: 900; font-style: italic; letter-spacing: 2px; margin: 0 0 25px 0; font-size: 24px; }
+    .container { width: 100%; max-width: 360px; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; }
+    .wifi-box { background: #1a1a1a; border-radius: 8px; padding: 4px; width: 100%; max-height: 220px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.08); box-sizing: border-box; margin-bottom: 16px; }
+    .wifi-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: background-color 0.15s; border-radius: 4px; }
     .wifi-item:last-child { border-bottom: none; }
-    .wifi-item:hover { background: #2a2a2a; }
-    .w-left { font-size: 15px; display: flex; align-items: center; gap: 10px; }
-    .w-right { font-size: 14px; color: #aaa; display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
-    .btn { width: 100%; padding: 14px; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 16px; font-family: 'Roboto', sans-serif; transition: filter 0.15s, transform 0.05s; box-sizing: border-box; display: block; }
+    .wifi-item:hover { background-color: rgba(255,255,255,0.06); }
+    .w-left { font-size: 14px; display: flex; align-items: center; gap: 10px; font-weight: 500; }
+    .w-right { font-size: 13px; color: #888888; display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
+    .btn { width: 100%; padding: 14px; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 15px; font-family: inherit; transition: filter 0.15s, transform 0.05s; box-sizing: border-box; display: block; letter-spacing: 0.3px; min-height: 48px; }
     .btn:hover { filter: brightness(1.15); }
     .btn:focus-visible { outline: 2px solid #3498db; outline-offset: 2px; }
     .btn:active { transform: scale(0.98); }
     .btn:disabled { opacity: 0.5; pointer-events: none; }
-    .btn-orange { background-color: #e67e22; color: white; }
-    .btn-green { background-color: #2ecc71; color: white; }
+    .btn-orange { background-color: #d97706; color: white; }
+    .btn-green { background-color: #16a34a; color: white; }
     form { width: 100%; }
-    input[type="text"], input[type="password"] { background-color: #ffffff; color: #000000; padding: 14px; margin-bottom: 12px; width: 100%; border-radius: 6px; border: 1px solid #444; font-size: 16px; box-sizing: border-box; text-align: center; }
-    input[type="text"]:focus, input[type="password"]:focus { outline: 2px solid #3498db; outline-offset: 1px; }
-    .btn-toggle { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: #2a2a2a; color: #fff; border: 1px solid #555; border-radius: 4px; padding: 7px 11px; font-size: 11px; font-weight: 700; cursor: pointer; letter-spacing: 0.5px; transition: background-color 0.15s, transform 0.05s; }
-    .btn-toggle:hover { background: #3a3a3a; }
+    input[type="text"], input[type="password"] { background-color: #1a1a1a; color: #ffffff; padding: 14px 16px; margin-bottom: 12px; width: 100%; border-radius: 6px; border: 1px solid rgba(255,255,255,0.12); font-size: 15px; box-sizing: border-box; text-align: left; font-family: inherit; }
+    input[type="text"]:focus, input[type="password"]:focus { outline: 2px solid #3498db; border-color: transparent; }
+    input::placeholder { color: #666666; font-size: 14px; }
+    .btn-toggle { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: #262626; color: #aaaaaa; border: 1px solid #444444; border-radius: 4px; padding: 7px 11px; font-size: 11px; font-weight: 700; cursor: pointer; letter-spacing: 0.5px; transition: all 0.15s; font-family: inherit; }
+    .btn-toggle:hover { color: #ffffff; background: #333333; }
     .btn-toggle:focus-visible { outline: 2px solid #3498db; }
     .btn-toggle:active { transform: translateY(-50%) scale(0.95); }
-    .footer-link { color: #888888; text-decoration: underline; font-size: 15px; margin-top: 35px; display: block; }
+    .footer-link { color: #888888; text-decoration: underline; font-size: 14px; margin-top: 32px; display: block; transition: color 0.15s; }
+    .footer-link:hover { color: #cccccc; }
   </style>
   <script>
     function fillSSID(el) { document.getElementById('ssid').value = el.getAttribute('data-ssid'); document.getElementById('pass').focus(); }
     function scan() {
       let wb = document.getElementById('wb');
-      wb.innerHTML = '<div style="padding:20px;color:#aaa;">Scanning WiFi...</div>';
+      wb.innerHTML = '<div style="padding:24px;color:#888;">Scanning WiFi networks...</div>';
       fetch('/scan').then(r=>r.json()).then(d=>{
         wb.innerHTML = '';
         if(d.length === 0) {
-          wb.innerHTML = '<div style="padding:20px;color:#aaa;">No WiFi found</div>';
+          wb.innerHTML = '<div style="padding:24px;color:#888;">No WiFi found</div>';
           return;
         }
         d.forEach(w => {
@@ -173,7 +172,7 @@ const char AP_HTML[] PROGMEM = R"rawliteral(
           item.appendChild(right);
           wb.appendChild(item);
         });
-      }).catch(() => { wb.innerHTML = '<div style="padding:20px;color:#e74c3c;">Scan failed</div>'; });
+      }).catch(() => { wb.innerHTML = '<div style="padding:24px;color:#ef4444;">Scan failed</div>'; });
     }
     function togglePass() {
       let p = document.getElementById('pass');
@@ -190,10 +189,10 @@ const char AP_HTML[] PROGMEM = R"rawliteral(
   </script>
 </head>
 <body>
-  <h1>ZZLIGHT PROJECT</h1>
   <div class="container">
+    <h1>ZZLIGHT PROJECT</h1>
     <div id="wb" class="wifi-box"></div>
-    <button type="button" class="btn btn-orange" style="margin-bottom: 25px;" onclick="scan()">Refresh</button>
+    <button type="button" class="btn btn-orange" style="margin-bottom: 20px;" onclick="scan()">Refresh Networks</button>
     <form action="/connect" method="POST">
       <input type="text" name="ssid" id="ssid" placeholder="SSID (Max 32 Characters)" maxlength="32" required>
       <div style="position:relative;width:100%;margin-bottom:12px;">
@@ -217,15 +216,21 @@ const char SAVED_HTML[] PROGMEM = R"rawliteral(
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ARTNET-DMX Connect</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;900&display=swap');
-    body { background-color: #121212; color: #ffffff; font-family: 'Roboto', sans-serif; text-align: center; margin-top: 100px; padding: 20px; }
-    h1 { font-weight: 900; font-style: italic; letter-spacing: 2px; }
-    p { font-size: 16px; margin-top: 20px; color: #ccc; }
+    body { background-color: #121212; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; text-align: center; margin: 0; padding: 40px 16px; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; }
+    h1 { font-weight: 900; font-style: italic; letter-spacing: 2px; margin: 0 0 16px 0; font-size: 24px; }
+    .container { width: 100%; max-width: 360px; box-sizing: border-box; }
+    .card { background-color: #1a1a1a; padding: 36px 20px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); box-sizing: border-box; }
   </style>
 </head>
 <body>
-  <h1>ZZLIGHT PROJECT</h1>
-  <p>WiFi Credentials Saved. Applying and Connecting...</p>
+  <div class="container">
+    <div class="card">
+      <h1>ZZLIGHT PROJECT</h1>
+      <div style="color: #22c55e; font-size: 32px; line-height: 1; margin-bottom: 14px;">✓</div>
+      <div style="color: #f3f4f6; font-size: 16px; font-weight: 700;">WiFi Credentials Saved</div>
+      <div style="color: #888888; font-size: 13px; margin-top: 8px;">Applying network settings and rebooting...</div>
+    </div>
+  </div>
 </body>
 </html>
 )rawliteral";
@@ -239,25 +244,27 @@ const char RUN_HTML[] PROGMEM = R"rawliteral(
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ARTNET-DMX Monitor</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,700;0,900;1,700&display=swap');
-    body { background-color: #121212; color: #ffffff; font-family: 'Roboto', sans-serif; text-align: center; margin: 0; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
-    h1 { font-weight: 900; font-style: italic; letter-spacing: 2px; margin-bottom: 25px; }
-    .box { background-color: #1e1e1e; padding: 20px; border-radius: 8px; border: 1px solid #333; width: 100%; max-width: 340px; box-sizing: border-box; text-align: left; font-size: 15px; line-height: 1.8; margin-bottom: 25px; font-weight: 700; font-variant-numeric: tabular-nums; }
-    .box div { white-space: nowrap; }
-    .lbl { display: inline-block; width: 85px; color: #ccc; font-style: italic; }
-    .btn-container { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 340px; }
-    .btn { width: 100%; padding: 14px; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 16px; font-family: 'Roboto', sans-serif; transition: background-color 0.15s, transform 0.05s; }
+    body { background-color: #121212; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; text-align: center; margin: 0; padding: 36px 16px; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; }
+    h1 { font-weight: 900; font-style: italic; letter-spacing: 2px; margin: 0 0 25px 0; font-size: 24px; }
+    .container { width: 100%; max-width: 360px; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; }
+    .box { background-color: #1a1a1a; padding: 16px 20px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); width: 100%; box-sizing: border-box; margin-bottom: 20px; font-variant-numeric: tabular-nums; }
+    .row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; }
+    .row:last-child { border-bottom: none; }
+    .lbl { color: #888888; font-weight: 500; font-size: 11px; letter-spacing: 0.5px; }
+    .val { color: #f3f4f6; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+    .btn-container { display: flex; flex-direction: column; gap: 10px; width: 100%; box-sizing: border-box; }
+    .btn { width: 100%; padding: 14px; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 15px; font-family: inherit; transition: filter 0.15s, transform 0.05s; box-sizing: border-box; display: block; letter-spacing: 0.3px; min-height: 48px; }
     .btn:hover { filter: brightness(1.15); }
     .btn:focus-visible { outline: 2px solid #3498db; outline-offset: 2px; }
     .btn:active { transform: scale(0.98); }
     .btn:disabled { opacity: 0.5; pointer-events: none; }
-    .btn-red { background-color: #e74c3c; color: white; }
-    .btn-orange { background-color: #e67e22; color: white; }
-    .footer-link { color: #888888; text-decoration: underline; font-size: 15px; margin-top: 30px; display: block; }
-    .clr-g { color: #2ecc71; }
-    .clr-y { color: #f1c40f; }
-    .clr-r { color: #e74c3c; }
-    .val { color: #fff; font-variant-numeric: tabular-nums; }
+    .btn-red { background-color: #dc2626; color: white; }
+    .btn-orange { background-color: #d97706; color: white; }
+    .footer-link { color: #888888; text-decoration: underline; font-size: 14px; margin-top: 32px; display: block; transition: color 0.15s; }
+    .footer-link:hover { color: #cccccc; }
+    .clr-g { color: #22c55e; }
+    .clr-y { color: #eab308; }
+    .clr-r { color: #ef4444; }
   </style>
   <script>
     function updateClientTime() {
@@ -275,7 +282,7 @@ const char RUN_HTML[] PROGMEM = R"rawliteral(
 
         let stElem = document.getElementById('st-val');
         stElem.textContent = d.status;
-        stElem.className = d.status === "Connected" ? "clr-g" : "clr-r";
+        stElem.className = d.status === "Connected" ? "val clr-g" : "val clr-r";
 
         let sgElem = document.getElementById('sg-val');
         if(d.mode === "AP") {
@@ -286,13 +293,13 @@ const char RUN_HTML[] PROGMEM = R"rawliteral(
            let dbm = parseInt(d.rssi);
            let strTxt = dbm > -60 ? "Good" : (dbm > -80 ? "Medium" : "Weak");
            sgElem.textContent = `${dbm} dBm (${strTxt})`;
-           sgElem.className = dbm > -60 ? "clr-g" : (dbm > -80 ? "clr-y" : "clr-r");
+           sgElem.className = dbm > -60 ? "val clr-g" : (dbm > -80 ? "val clr-y" : "val clr-r");
            document.getElementById('btn-reset').style.display = 'block';
         }
 
         let dxElem = document.getElementById('dx-val');
         dxElem.textContent = d.dmx;
-        dxElem.className = d.dmx === "Active" ? "clr-g" : (d.dmx === "No Signal" ? "clr-y" : "clr-r");
+        dxElem.className = d.dmx === "Active" ? "val clr-g" : (d.dmx === "No Signal" ? "val clr-y" : "val clr-r");
         document.getElementById('rx-val').textContent = `${d.rx_count} packets`;
       }).catch(e => console.log(e));
     }
@@ -315,30 +322,32 @@ const char RUN_HTML[] PROGMEM = R"rawliteral(
   </script>
 </head>
 <body>
-  <h1>ZZLIGHT PROJECT</h1>
+  <div class="container">
+    <h1>ZZLIGHT PROJECT</h1>
 
-  <div class="box">
-    <div><span class="lbl">Date</span>: <span id="dt-val" class="val">Loading...</span></div>
-    <div><span class="lbl">Time</span>: <span id="tm-val" class="val">Loading...</span></div>
-    <div><span class="lbl">IP</span>: <span id="ip-val" class="val">Loading...</span></div>
-    <div><span class="lbl">WiFi</span>: <span id="wf-val" class="val">Loading...</span></div>
-    <div><span class="lbl">Status</span>: <span id="st-val" class="val">Loading...</span></div>
-    <div><span class="lbl">Strength</span>: <span id="sg-val" class="val">Loading...</span></div>
-    <div><span class="lbl">DMX</span>: <span id="dx-val" class="val">Loading...</span></div>
-    <div><span class="lbl">RX</span>: <span id="rx-val" class="val">Loading...</span></div>
+    <div class="box">
+      <div class="row"><span class="lbl">DATE</span><span id="dt-val" class="val">Loading...</span></div>
+      <div class="row"><span class="lbl">TIME</span><span id="tm-val" class="val">Loading...</span></div>
+      <div class="row"><span class="lbl">IP ADDRESS</span><span id="ip-val" class="val">Loading...</span></div>
+      <div class="row"><span class="lbl">WIFI SSID</span><span id="wf-val" class="val">Loading...</span></div>
+      <div class="row"><span class="lbl">STATUS</span><span id="st-val" class="val">Loading...</span></div>
+      <div class="row"><span class="lbl">SIGNAL</span><span id="sg-val" class="val">Loading...</span></div>
+      <div class="row"><span class="lbl">DMX ENGINE</span><span id="dx-val" class="val">Loading...</span></div>
+      <div class="row"><span class="lbl">RECEIVED</span><span id="rx-val" class="val">Loading...</span></div>
+    </div>
+
+    <div class="btn-container">
+      <button id="btn-reset" class="btn btn-red" onclick="req('/reset', 'Reset WiFi configuration and reboot module?')">WiFi Reset</button>
+      <button class="btn btn-orange" onclick="req('/reboot', 'Reboot hardware module?')">Module Reboot</button>
+    </div>
+
+    <a href="/setup" class="footer-link">Network Setup</a>
   </div>
-
-  <div class="btn-container">
-    <button id="btn-reset" class="btn btn-red" onclick="req('/reset', 'Reset WiFi configuration and reboot module?')">WiFi Reset</button>
-    <button class="btn btn-orange" onclick="req('/reboot', 'Reboot hardware module?')">Module Reboot</button>
-  </div>
-
-  <a href="/setup" class="footer-link">Network Setup</a>
 </body>
 </html>
 )rawliteral";
 
-// --- DMX TRANSMISSION TASK (CORE 0 - REAL-TIME ISOLATED) ---
+// Dedicated DMX512 transmission task pinned to Core 0 (hard real-time loop)
 static const uint32_t DMX_PERIOD_US = 23220; // 43.07 FPS nominal (512 Channel Frame)
 static const uint8_t zeroFrame[512] = {0};
 
@@ -393,7 +402,7 @@ void DMXCoreTask(void *pvParameters) {
   }
 }
 
-// --- SETUP SISTEM ---
+// System hardware and peripheral initialization
 void setup() {
   Serial.begin(115200);
 
@@ -434,7 +443,7 @@ void setup() {
   }
 }
 
-// --- MAIN LOOP (CORE 1) ---
+// Core 1 main loop: network packet ingestion, web server, and LCD animation
 void loop() {
   handleLCDAnimation();
   server.handleClient();
@@ -443,11 +452,11 @@ void loop() {
     dnsServer.processNextRequest();
   }
 
-  // --- MESIN PENERIMAAN ART-NET BERPERFORMA TINGGI (DRAIN LOOP) ---
+  // Ingest incoming Art-Net UDP datagrams with drain loop
   if (currentState == S_RUN || currentState == S_AP_MODE) {
     int packetSize = 0;
 
-    // Kuras seluruh antrean UDP yang ada di buffer socket lwIP (Mencegah Starvation)
+    // Drain socket buffer to prevent packet starvation under burst traffic
     while ((packetSize = Udp.parsePacket()) > 0) {
       if (packetSize < 10) {
         Udp.flush();
@@ -458,21 +467,21 @@ void loop() {
       int bytesRead = Udp.read(packetBuffer, sizeof(packetBuffer));
       if (bytesRead < 10) continue;
 
-      // 1. Verifikasi Header Art-Net ID ("Art-Net\0")
+      // 1. Verify Art-Net identifier header
       if (memcmp(packetBuffer, ARTNET_HEADER_TAG, 8) != 0) {
         continue;
       }
 
-      // 2. Ekstrak OpCode (Little-Endian: Byte 8 LSB, Byte 9 MSB)
+      // 2. Extract OpCode (little-endian: byte 8 LSB, byte 9 MSB)
       uint16_t opCode = (uint16_t)packetBuffer[8] | ((uint16_t)packetBuffer[9] << 8);
 
-      // --- PENANGAN OP_POLL (0x2000): AUTO-DISCOVERY NODE ---
+      // ArtPoll handler: node auto-discovery reply
       if (opCode == ARTNET_OP_POLL) {
         sendArtPollReply(Udp.remoteIP(), Udp.remotePort());
         continue;
       }
 
-      // --- PENANGAN OP_DMX (0x5000): DATA KONTROL PANGGUNG ---
+      // ArtDmx handler: stage lighting control frame
       if (opCode == ARTNET_OP_DMX) {
         if (bytesRead < 18) continue;
 
@@ -520,7 +529,7 @@ void loop() {
     }
   }
 
-  // --- MESIN AUTO-RECONNECT NON-BLOCKING DENGAN SAGA RECOVERY ---
+  // Background Wi-Fi auto-reconnect engine
   if (currentState == S_RUN) {
     if (WiFi.status() != WL_CONNECTED) {
       if (wifiLostTime == 0) {
@@ -529,7 +538,7 @@ void loop() {
         setScreenState(S_WIFI_DISCONN1);
       }
       if (millis() - wifiLostTime > 30000) {
-        // Fallback aman ke AP mode jika 30s gagal TANPA merusak kredensial di NVS flash
+        // Fallback to emergency AP without clearing NVS flash credentials
         setScreenState(S_WIFI_DISCONN2, 2000, S_AP_MODE);
         startAP();
       } else {
@@ -545,7 +554,7 @@ void loop() {
       }
     }
   } else if (currentState == S_AP_MODE && ssid != "") {
-    // SAGA BACKGROUND RECOVERY: Cek status koneksi pada setiap loop
+    // Background station reconnect check
     if (WiFi.status() == WL_CONNECTED) {
       dnsServer.stop();
       WiFi.mode(WIFI_STA);
@@ -558,7 +567,7 @@ void loop() {
     }
   }
 
-  // --- MONITORING KONEKSI STASIUN PADA AP MODE ---
+  // SoftAP client station monitoring
   if (currentState == S_AP_MODE) {
     int currentDevices = WiFi.softAPgetStationNum();
     if (currentDevices != connectedDevices) {
@@ -573,7 +582,7 @@ void loop() {
   }
 }
 
-// --- PENGIRIMAN ARTOLLREPLY (OPCODE 0x2100) SESUAI SPESIFIKASI ART-NET 4 ---
+// Assemble and transmit ArtPollReply (OpCode 0x2100) per Art-Net 4 specification
 void sendArtPollReply(IPAddress remoteIP, uint16_t remotePort) {
   uint8_t reply[239];
   memset(reply, 0, sizeof(reply));
@@ -640,7 +649,7 @@ void sendArtPollReply(IPAddress remoteIP, uint16_t remotePort) {
   Udp.endPacket();
 }
 
-// --- FUNGSI SANITASI JSON ESCAPING ---
+// JSON string sanitization utility
 String escapeJsonString(const String& input) {
   String output = "";
   output.reserve(input.length() + 8);
@@ -664,7 +673,7 @@ String escapeJsonString(const String& input) {
   return output;
 }
 
-// --- INISIALISASI SOFTAP ---
+// Activate standalone Access Point mode
 void startAP() {
   WiFi.mode(WIFI_AP);
   WiFi.softAP("ARTNET-DMX", "andreas123");
@@ -680,7 +689,7 @@ void startAP() {
   setScreenState(S_AP_MODE);
 }
 
-// --- KONEKSI KE ACCESS POINT (STATION MODE) ---
+// Associate with stage Wi-Fi router in station mode
 void connectWiFi() {
   WiFi.mode(WIFI_STA);
   WiFi.setSleep(false); // Matikan modem sleep untuk latensi rendah stabil (<3ms)
@@ -709,7 +718,7 @@ void connectWiFi() {
   }
 }
 
-// --- REGISTRASI RUTE WEBSERVER TUNGGAL (STATE-AWARE ROUTING) ---
+// Centralized state-aware web route handlers
 void registerWebRoutes() {
   server.onNotFound([]() {
     if (currentState == S_AP_MODE) {
@@ -841,7 +850,7 @@ void registerWebRoutes() {
   });
 }
 
-// --- STATE MACHINE LCD NON-BLOCKING (ZERO BLOCKING DELAY) ---
+// Asynchronous non-blocking LCD state renderer
 void setScreenState(ScreenState newState, unsigned long holdDuration, ScreenState nextState) {
   currentState = newState;
   stateEnterTime = millis();
