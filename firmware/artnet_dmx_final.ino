@@ -561,7 +561,7 @@ void loop() {
       connectedDevices = currentDevices;
       lcd.setCursor(0, 1);
       if (connectedDevices > 0) {
-        lcd.print("Dev Connected!  ");
+        lcd.print("Device Connect! ");
       } else {
         lcd.print("192.168.4.1     ");
       }
@@ -861,7 +861,7 @@ void setScreenState(ScreenState newState, unsigned long holdDuration, ScreenStat
       lcd.setCursor(0, 0); lcd.print("ARTNET-DMX      ");
       lcd.setCursor(0, 1);
       if (connectedDevices > 0) {
-        lcd.print("Dev Connected!  ");
+        lcd.print("Device Connect! ");
       } else {
         lcd.print("192.168.4.1     ");
       }
