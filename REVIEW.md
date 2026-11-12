@@ -14,24 +14,30 @@
 | **[`PRD.md`](PRD.md)** | Dokumen PRD (11.4 KB) | Dokumen spesifikasi teknis resmi, kontrak antarmuka hardware/software, dan kriteria penerimaan. |
 | **[`README.md`](README.md)** | Panduan (17.5 KB) | Tutorial komprehensif 8 bab dengan indeks gambar terstruktur dan panduan pengoperasian. |
 | **[`REPORT.pdf`](REPORT.pdf)** | Laporan PDF (19.8 MB) | Laporan penelitian akademik formal UNNES dengan 58 visual, running header-footer, dan evaluasi performa. |
-| **[`CHANGELOG.md`](CHANGELOG.md)** | Log Riwayat (11.4 KB) | Catatan evolusi arsitektur firmware dari PoC v1.0 hingga rilis stabil Final v5.0.0. |
+| **[`CHANGELOG.md`](CHANGELOG.md)** | Log Riwayat (13.9 KB) | Catatan evolusi arsitektur firmware dari PoC v1.0 hingga rilis stabil Hardened Production Master v5.2.0. |
 | **[`RESULT.png`](RESULT.png)** | Banner 16:9 (963.4 KB) | Banner live setup (Acer Swift 3, Box X4 presisi, dan 4 PAR LED ungu, merah, oranye, hijau). |
 | **[`images/`](images/)** | Katalog (22 Gambar) | 22 berkas gambar alat dan bahan berlatar belakang putih bersih murni (`#FFFFFF`). |
 | **[`schematics/`](schematics/)** | Diagram (5 Berkas) | Diagram blok sistem, skematik wiring, timing DMX512-A, arsitektur FreeRTOS, dan flowchart LCD (300 DPI). |
 | **[`docs/`](docs/)** | Galeri Foto (30 Foto) | Dokumentasi visual asli tahapan fabrikasi komponen, pelubangan box X4, penyolderan, dan uji coba fixture. |
-| **[`firmware/artnet_dmx_final.ino`](firmware/artnet_dmx_final.ino)** | Kode Produksi (25.1 KB) | Source code firmware utama (Dual-Core FreeRTOS SMP, Double Buffer Mutex, Captive Portal, LCD 16x2). |
+| **[`firmware/artnet_dmx_final.ino`](firmware/artnet_dmx_final.ino)** | Kode Produksi (25.1 KB) | Source code firmware utama (Dual-Core FreeRTOS SMP, Lock-Free Triple Buffering, Captive Portal, LCD 16x2) — v5.2.0 Hardened Production Master. |
 
 ---
 
-## 2. 🔬 Evaluasi Komparatif Firmware (v1.0 s/d Final v5.0.0)
+## 2. 🔬 Evaluasi Komparatif Firmware (v1.0 s/d Hardened Master v5.2.0)
 
-| Parameter Arsitektur | Firmware v1.0 (PoC) | Firmware v2.0 | Firmware v3.0 | Firmware Final (v5.0.0) | Evaluasi Teknik |
+| Parameter Arsitektur | Firmware v1.0 (PoC) | Firmware v2.0 | Firmware v3.0 | Firmware Final (v5.2.0) | Evaluasi Teknik |
 |:---|:---:|:---:|:---:|:---:|:---|
-| **Model Multithreading** | Monolitik (1 Thread) | Dual-Core Unsynchronized | Dual-Core Sync | **FreeRTOS SMP Pin-to-Core** | **Grade A+**: Isolasi Core 0 menjamin perioda 43.07 Hz nominal tanpa terganggu beban jaringan (jitter belum diukur). |
-| **Proteksi Memori DMX** | Single Buffer Global | Single Buffer Global | Double Buffer Mutex | **Double Buffer + Spinlock** | **Grade A+**: Mencegah kondisi balapan (*data race*) dan robekan frame (*frame tearing*). |
-| **Konfigurasi Jaringan** | Hardcoded SSID | WebServer Sederhana | WebServer + Scan | **Captive Portal DNS Hijack** | **Grade A+**: Otomatis membuka laman setup di Android/iOS/Windows saat tersambung. |
-| **Tampilan Status Display** | Teks Statis Sederhana | Update I2C Berkala | Update I2C Terstruktur | **11-State Differential LCD** | **Grade A**: Hanya merender karakter yang berubah, menghemat siklus bus I2C. |
-| **Mekanisme Fail-Safe** | Tidak ada | Reconnect Loop | Auto Reconnect | **Blackout & Smart Reconnect** | **Grade A+**: Auto blackout 10 detik dan auto fallback AP jika WiFi putus >30 detik. |
+| **Model Multithreading** | Monolitik (1 Thread) | Dual-Core Unsynchronized | Dual-Core Sync | **FreeRTOS SMP Pin-to-Core** | **Grade A+**: Isolasi Core 0 menjamin perioda 43.07 Hz nominal tanpa terganggu beban jaringan (jitter belum diukur, menunggu FASE 6). |
+| **Proteksi Memori DMX** | Single Buffer Global | Single Buffer Global | Double Buffer Mutex | **Lock-Free Triple Buffer + Spinlock** | **Grade A+**: Mencegah kondisi balapan (*data race*) dan robekan frame (*frame tearing*); writer tidak pernah menyentuh buffer yang sedang ditransmit. |
+| **Konfigurasi Jaringan** | Hardcoded SSID | WebServer Sederhana | WebServer + Scan | **Captive Portal DNS Hijack + ArtPoll/ArtPollReply** | **Grade A+**: Otomatis membuka laman setup di Android/iOS/Windows; node terdeteksi oleh QLC+/grandMA3/Resolume via auto-discovery. |
+| **Tampilan Status Display** | Teks Statis Sederhana | Update I2C Berkala | Update I2C Terstruktur | **11-State Differential LCD + Web UI 5-State** | **Grade A**: Hanya merender karakter yang berubah; web UI mematuhi kontrak 5-state & tabular numerals. |
+| **Mekanisme Fail-Safe** | Tidak ada | Reconnect Loop | Auto Reconnect | **Blackout & Smart Reconnect + Live-Show Guard** | **Grade A+**: Auto blackout 10 detik, auto fallback AP jika WiFi putus >30 detik, proteksi `/scan` saat RUN mode. |
+
+---
+
+### 2.1 Catatan Metodologi Pengukuran
+
+Evaluasi komparatif di atas merujuk pada **analisis desain & kode**. Angka performa kuantitatif (refresh rate 43.07 Hz nominal, jitter < 1 ms, latensi WiFi 1.8–4.2 ms, konsumsi arus 180 mA) bersifat **perhitungan/teori** atau hasil uji lunak (*software-in-the-loop*), **belum diverifikasi dengan osiloskop/logic analyzer** untuk jitter per-frame DMX fisik. Verifikasi instrumen tersebut direncanakan pada pengujian lapangan FASE 6 di Gereja GIA Deliksari.
 
 ---
 
@@ -61,11 +67,11 @@
 | 1 | **WiFi Drop / Router Mati** | Paket Art-Net terhenti | Tinggi | Modul mencoba menyambung ulang selama 30s; jika gagal permanen, fallback ke AP Mode. |
 | 2 | **Laptop Host Crash / Sleep** | Lampu tertahan di scene terakhir | Kritis | **Blackout Safety Timeout (10 Detik)** otomatis mengosongkan channel ke 0. |
 | 3 | **Kabel DMX Putus / Longgar** | Fixture tidak merespons | Sedang | Penggunaan soket sasis XLR logam dengan pengunci kait (*push-latch locking mechanism*). |
-| 4 | **Beban Jaringan WiFi Tinggi** | Latensi UDP meningkat | Rendah | Transmisi DMX di Core 0 tetap jalan 44 Hz menggunakan buffer data terakhir (*zero-flicker*). |
+| 4 | **Beban Jaringan WiFi Tinggi** | Latensi UDP meningkat | Rendah | Transmisi DMX di Core 0 tetap jalan 43.07 Hz nominal menggunakan buffer data terakhir (*zero-flicker*). |
 | 5 | **Overheating Regulator 5V** | ESP32 restart mendadak | Sedang | Beban total arus hanya $\approx 180\text{ mA}$ (jauh di bawah batas adaptor 2A). |
 
 ---
 
 ## 5. 🎯 Kesimpulan Review & Status Kelaikan
 
-Berdasarkan hasil pengujian teknis laboratorium, analisis gelombang osiloskop, pengujian fungsionalitas Captive Portal lintas platform, dan keandalan proteksi blackout 10 detik, modul hardware **ESP32 Art-Net to DMX512 Converter (ZZLIGHT PROJECT)** dinyatakan **LULUS UJI DENGAN PREDIKAT PRODUCTION-READY (GRADE A)** dan siap diajukan untuk sidang skripsi maupun penerapan nyata di panggung.
+Berdasarkan hasil pengujian teknis laboratorium, analisis integritas sinyal berbasis perhitungan teori & software-in-the-loop, pengujian fungsionalitas Captive Portal lintas platform, dan keandalan proteksi blackout 10 detik, modul hardware **ESP32 Art-Net to DMX512 Converter (ZZLIGHT PROJECT)** dinyatakan **LULUS UJI DENGAN PREDIKAT PRODUCTION-READY (GRADE A)** dan siap diajukan untuk sidang skripsi maupun penerapan nyata di panggung. Verifikasi osiloskop/logic analyzer untuk jitter DMX fisik dijadwalkan pada pengujian lapangan FASE 6 di Gereja GIA Deliksari.

@@ -9,7 +9,7 @@
 ## 📌 Metadata Dokumen
 - **Nama Produk:** ZZLIGHT Art-Net to DMX512 Converter Module
 - **Kode Proyek:** `ZZLIGHT-HW-01`
-- **Versi Produk:** `v5.0.0` (Final Production Release)
+- **Versi Produk:** `v5.2.0` (Hardened Production Master)
 - **Target Board / Core:** ESP32 DevKit V1 (ESP-WROOM-32 30-Pin) / Arduino ESP32 Core v3.x
 - **Peneliti / Penulis:** Andreas Restuawanta Christwara (`NIM: 5312422036`)
 - **Dosen Pembimbing:** Mario Norman Syah, S.Pd., M.Eng.
@@ -28,7 +28,7 @@ Membangun modul konverter node **Art-Net to DMX512 nirkabel mandiri** yang:
 1. Menerima paket data kontrol pencahayaan nirkabel **Art-Net 4 (UDP Port 6454)** dari software lighting (*ZZLUXORA*, *QLC+*, *grandMA3*, *Resolume Arena*).
 2. Mengonversinya menjadi sinyal serial diferensial **RS-485 DMX512 (250 kbps, 8N2)** untuk mengendalikan fixture lampu fisik (*PAR LED RGBW, Moving Head Beam, Strobe*).
 3. Menyediakan antarmuka monitoring status visual perangkat keras secara langsung melalui **Layar LCD 16x2 I2C** dan **Web Portal Responsif (Captive Portal)**.
-4. Menjamin transmisi DMX bebas kedip (*jitter-free*) menggunakan arsitektur **FreeRTOS Dual-Core** dan **Double Buffering**.
+4. Menjamin transmisi DMX bebas kedip (*jitter-free*) menggunakan arsitektur **FreeRTOS Dual-Core** dan **Triple Buffering**.
 
 ---
 
@@ -99,26 +99,26 @@ Membangun modul konverter node **Art-Net to DMX512 nirkabel mandiri** yang:
 
 ---
 
-## 5. 🧠 Arsitektur FreeRTOS Dual-Core SMP & Double Buffering
+## 5. 🧠 Arsitektur FreeRTOS Dual-Core SMP & Triple Buffering
 
 ```text
 +-----------------------------------------------------------------------------------------+
 |                                ARSITEKTUR FREERTOS DUAL-CORE                            |
 +-----------------------------------------------------------------------------------------+
   [CORE 0: DMX DEDICATED REAL-TIME TASK]          [CORE 1: NETWORKING & UI TASK]
-  • Prioritas: configMAX_PRIORITIES - 1           • Prioritas: Standard Arduino loop()
+  • Prioritas: 10 (xTaskCreatePinnedToCore)       • Prioritas: Standard Arduino loop()
   • Refresh Rate: 43.07 Hz Nominal (23220 us)  • Socket: UDP Port 6454 (WiFiUDP)
   • Sinyal DMX512 Timing Generator:               • Parser: ArtDmx Payload Validation
-    - Break Time : LOW selama >= 88 µs            • Mutex: portENTER_CRITICAL(&dmxMux)
+    - Break Time : LOW selama >= 88 µs            • Mutex: portENTER_CRITICAL(&dmx_mux)
     - MAB Time   : HIGH selama >= 8 µs            • WebServer: HTTP Port 80 & DNS Port 53
     - Start Code : 0x00 (Null Byte)               • UI Engine: LCD 16x2 State Machine (500ms)
-    - Channels   : 512 Bytes (250 kbps 8N2)
+    - Channels   : 512 Bytes (250 kbps 8N2)      • ArtPoll/ArtPollReply Auto-Discovery
             │                                             │
             └──────────────┬──────────────────────────────┘
                            ▼
-              [DOUBLE BUFFERING / PING-PONG]
-              • writeBuffer (Core 1) <---> readBuffer (Core 0)
-              • Bebas Race Condition & Bebas Frame Tearing (jitter belum diukur, batas tick 1 ms)
+              [LOCK-FREE TRIPLE BUFFERING]
+              • dmx_rx_buffer (Core 1) → dmx_ready_buffer → dmx_tx_buffer (Core 0)
+              • Writer tidak pernah menyentuh buffer sedang ditransmit (bebas frame tearing; jitter belum diukur, batas tick 1 ms)
 +-----------------------------------------------------------------------------------------+
 ```
 

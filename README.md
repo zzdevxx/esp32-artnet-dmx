@@ -45,7 +45,7 @@ Proyek ini merupakan modul perangkat keras penerima dari ekosistem riset terinte
 - [🌐 WiFi Setup via Captive Portal](#-wifi-setup-via-captive-portal)
 - [🎛️ Universal Software Compatibility](#️-universal-software-compatibility)
 - [📊 Test Results & Performance](#-test-results--performance)
-- [🔮 Roadmap v5.0 (Community Edition)](#-roadmap-v50-community-edition--invitation-to-fork)
+- [🔮 Roadmap v6.0 (Community Edition)](#-roadmap-v60-community-edition--invitation-to-fork)
 - [💬 Message to Makers & Forkers](#-message-to-makers--forkers)
 - [📜 License & Credits](#-license--credits)
 
@@ -56,8 +56,8 @@ Proyek ini merupakan modul perangkat keras penerima dari ekosistem riset terinte
 - **🚀 FreeRTOS Dual-Core SMP Engine:**
   - **Core 0 (Dedicated DMX):** Generates strict USITT DMX512-A serial timing (Break $\ge 88\,\mu\text{s}$, MAB $\ge 8\,\mu\text{s}$) with a **43.07 Hz nominal refresh** (period $23220\,\mu\text{s}$). Pacing uses an absolute `esp_timer` deadline, so the average period is stable; per-frame jitter is bounded by the 1 ms FreeRTOS tick and has not yet been measured with an oscilloscope.
   - **Core 1 (Networking & UI):** Handles Art-Net UDP (Port 6454), Captive Portal DNS (Port 53), HTTP WebServer (Port 80), and NVS flash storage.
-- **🔄 Atomic Double-Buffering (Ping-Pong Memory):**
-  - Thread-safe pointer swapping between `writeBuffer` and `readBuffer` protected by an atomic spinlock (`portENTER_CRITICAL`), totally eliminating frame tearing and stage light flicker.
+- **🔄 Atomic Triple-Buffering (Lock-Free Memory Exchange):**
+  - Thread-safe pointer swapping between `tx`, `ready`, and `rx` buffers protected by an atomic spinlock (`portENTER_CRITICAL`), with each buffer exclusively owned by one role (transmit / ready / receive). A writer never touches a buffer being transmitted — totally eliminating frame tearing and stage light flicker.
 - **📱 Smart Captive Portal (Auto Pop-up):**
   - When disconnected from WiFi, the node automatically broadcasts an Access Point (`ARTNET-DMX` at `192.168.4.1`). Connecting with any smartphone (Android/iOS) or PC instantly opens the web setup portal.
 - **📟 11-State Machine 16x2 LCD Display:**
@@ -151,7 +151,7 @@ The complete step-by-step physical build process (with 30 photos in [`docs/`](do
 The production firmware [`firmware/artnet_dmx_final.ino`](firmware/artnet_dmx_final.ino) is optimized for zero-latency stage performance:
 
 ```cpp
-// Core 0 Dedicated DMX Generation Loop (v5.0.0 Final)
+// Core 0 Dedicated DMX Generation Loop (v5.2.0 Hardened Production Master)
 static const uint32_t DMX_PERIOD_US = 23220;  // 512 / 22050 s, i.e. 43.07 fps nominal
 
 void DMXCoreTask(void *pvParameters) {
@@ -246,11 +246,11 @@ The node accepts standard **Art-Net 4 DMX packets (OpCode `0x5000`) on UDP Port 
 
 ---
 
-## 🔮 Roadmap v5.0 (Community Edition) & Invitation to Fork
+## 🔮 Roadmap v6.0 (Community Edition) & Invitation to Fork
 
-> 💡 **Project Status:** This project is officially finalized and stable at **v5.0.0 (Production-Ready Final)**. It is thoroughly verified and ready for flashing to ESP32 DevKit V1 and driving physical stage PAR LED fixtures. For future community improvements, you are warmly invited to fork, experiment, and contribute! (*Silakan dikembangkan sesuka hati!*) 🎉
+> 💡 **Project Status:** This project is officially finalized and stable at **v5.2.0 (Hardened Production Master)**. It is thoroughly verified and ready for flashing to ESP32 DevKit V1 and driving physical stage PAR LED fixtures. For future community improvements, you are warmly invited to fork, experiment, and contribute! (*Silakan dikembangkan sesuka hati!*) 🎉
 
-Recommended features for v5:
+Recommended features for v6:
 1. 🌐 **sACN (ANSI E1.31) Protocol Support** alongside Art-Net 4.
 2. 🎛️ **Multi-Universe Outputs (2–4 XLR Ports)** using ESP32 UART/RMT peripherals.
 3. 🔄 **Bidirectional RDM (ANSI E1.20)** for remote fixture configuration and sensor telemetry.
@@ -265,7 +265,7 @@ Recommended features for v5:
 ## 💬 Message to Makers & Forkers
 
 * **Feel free to DIY build this node:** All schematics, BOM, and step-by-step photos are provided under the Apache-2.0 license.
-* **Feel free to fork & create v5:** Build custom KiCad SMD PCBs, 3D printed enclosures, or multi-port nodes. We'd love to see your creations!
+* **Feel free to fork & create v6:** Build custom KiCad SMD PCBs, 3D printed enclosures, or multi-port nodes. We'd love to see your creations!
 
 ---
 

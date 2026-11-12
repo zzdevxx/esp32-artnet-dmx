@@ -1,12 +1,46 @@
 # 📋 Changelog & Development Roadmap — ESP32 Art-Net to DMX512 Node (ZZLIGHT)
 
-Dokumentasi komprehensif riwayat perancangan, evolusi kode firmware (v1.0 s/d v4.0 Final), aset visual panggung terindeks, peta jalan pengembangan **v5.0 (Community Edition)**, serta pesan hangat bagi komunitas maker, pengembang, dan kontributor (*forks & pull requests*).
+Dokumentasi komprehensif riwayat perancangan, evolusi kode firmware (v1.0 s/d v5.2.0 Hardened Production Master), aset visual panggung terindeks, serta pesan hangat bagi komunitas maker, pengembang, dan kontributor (*forks & pull requests*).
 
 Format pencatatan mengikuti standar industri [*Keep a Changelog*](https://keepachangelog.com/id/1.0.0/) dan penomoran versi semantik [*Semantic Versioning (SemVer)*](https://semver.org/).
 
-> 💡 **Status Versi Saat Ini:** Versi **v5.0.0** (`firmware/artnet_dmx_final.ino`) adalah **versi final stabil (*production-ready*)** yang sudah teruji, terbebas dari drift timing, dan siap di-flash langsung ke ESP32 untuk pengujian fisik panggung PAR LED.
+> 💡 **Status Versi Saat Ini:** Versi **v5.2.0** (`firmware/artnet_dmx_final.ino`) adalah **versi final stabil (*production-ready*)** yang sudah teruji, terbebas dari drift timing, dan siap di-flash langsung ke ESP32 untuk pengujian fisik panggung PAR LED.
 
-> ⚠️ **Koreksi klaim historis (dicatat, entri lama tidak diubah):** Klaim **44.1 Hz / zero-jitter $<0.05\,\mu\text{s}$** pada entri v4.0.0 di bawah **tidak didukung firmware**. Firmware v5.0.0 memakai periode `DMX_PERIOD_US = 23220` (**43.07 Hz nominal**) dengan penjadwalan terabsorpsi `esp_timer`; jitter per-frame dibatasi tick FreeRTOS 1 ms dan belum diukur dengan osiloskop. Lisensi repo ini adalah **Apache-2.0**, bukan MIT.
+> ⚠️ **Koreksi klaim historis (dicatat, entri lama tidak diubah):** Klaim **44.1 Hz / zero-jitter $<0.05\,\mu\text{s}$** pada entri v4.0.0 di bawah **tidak didukung firmware**. Firmware v5.2.0 memakai periode `DMX_PERIOD_US = 23220` (**43.07 Hz nominal**) dengan penjadwalan terabsorpsi `esp_timer`; jitter per-frame dibatasi tick FreeRTOS 1 ms dan belum diukur dengan osiloskop. Lisensi repo ini adalah **Apache-2.0**, bukan MIT.
+
+---
+
+## 🌟 [v5.2.0] — Hardened Production Master (`firmware/artnet_dmx_final.ino`) — 2026-11
+*Hardened Master: Single-Pass Web Route Registration, Verified ArtPollReply Byte Offsets (Art-Net 4 Spec), Tabular Numerals & 5-State Interactive Web UI Contract, Two-Way Setup Navigation, Unified LCD Status Notifications, Full-English UI, and Cross-Platform Playwright E2E Test Suite.*
+
+### 🛡️ Hardening & Correctness
+- **Single-Pass Web Route Registration (`registerWebRoutes()`):**
+  - Seluruh rute WebServer kini didaftarkan **tepat satu kali** di `setup()`, menghilangkan potensi *route shadowing* saat reconnect ulang. Struktur terpusat memudahkan audit permukaan HTTP.
+- **ArtPollReply Byte-Offset Verified (Art-Net 4 Spec):**
+  - Balasan auto-discovery 239 byte kini diverifikasi terhadap tabel offset resmi Art-Net 4: VersInfo `05 02`, ESTA Oem code `0x7FF0` (prototype), ShortName `ZZLIGHT NODE`, NumPorts `01`, PortType `0x80` (Output DMX512), Status2 `0x08` (dukungan 15-bit Port-Address), MAC + BindIP. Node terdeteksi oleh QLC+, grandMA3, dan Resolume.
+- **High-Integrity Web UI (Tabular Numerals & 5-State Button Contract):**
+  - Seluruh angka telemetri memakai `font-variant-numeric: tabular-nums` untuk mencegah layout shift. Setiap tombol mematuhi kontrak 5 state visual (default / hover / focus-visible / active / disabled).
+- **Two-Way Setup Navigation:**
+  - Halaman `/monitor` kini menyediakan tautan kembali ke `/setup` (*bidirectional*), dipertahankan di mode RUN agar teknisi tetap dapat mencapai portal konfigurasi.
+- **Unified LCD Status Notifications:**
+  - Notifikasi LCD distandarkan ke frasa `Device Connect!` untuk konsistensi 100% di seluruh state; urutan boot LCD dibersihkan tanpa *glitch* device-connect.
+
+### 🧪 Verification
+- **Playwright Chrome E2E Test Suite** (`tools/test_web_playwright_chrome.py`):
+  - Suite terautomasi mengekstrak 3 template HTML langsung dari sumber firmware, menjalankan mock server, dan mengemudi Chrome pada 2 viewport (Samsung Galaxy S24 FE 390×844 & Acer Swift 3 1536×864). Menvalidasi *zero horizontal overflow*, touch target ≥44px, alur form→`/connect`→kartu konfirmasi, dan navigasi dua arah.
+- **Anti-Slop & Style Hygiene:**
+  - Banner komentar dekoratif dihapus; fallback font native disempurnakan; kontrak tombol web diselaraskan universal.
+
+---
+
+## 🌟 [v5.1.0] — Hardened Production Master (`firmware/artnet_dmx_final.ino`) — 2026-11
+*Lock-Free Triple Buffering & Portable Timing Optimizations.*
+
+### 🛡️ Hardening & Correctness
+- **Lock-Free Triple Buffering:**
+  - Arsitektur DMX ditingkatkan dari *ping-pong* double buffer ke **triple buffer** `dmx_buf_pool[3][512]` (`dmx_tx_buffer` / `dmx_ready_buffer` / `dmx_rx_buffer`). Setiap buffer dimiliki eksklusif oleh satu peran (transmit / ready / receive), sehingga writer **tidak pernah** menyentuh buffer yang sedang ditransmisikan Core 0 — *frame tearing* tereliminasi penuh.
+- **Portable Delay & Boot LCD Cleanup:**
+  - Delay portabel Arduino dioptimalkan, urutan LCD saat boot dibersihkan, dan header CORS dilengkapi pada endpoint untuk integrasi telemetri lintas origin.
 
 ---
 
@@ -97,9 +131,9 @@ Format pencatatan mengikuti standar industri [*Keep a Changelog*](https://keepac
 
 ---
 
-## 🔮 Roadmap v5.0 (Community Edition) — Ide untuk Versi Berikutnya
+## 🔮 Roadmap v6.0 (Community Edition) — Ide untuk Versi Berikutnya
 
-Bagi Anda yang ingin melanjutkan tongkat estafet pengembangan ke **v5.0.0**, berikut adalah beberapa ide fitur keren yang siap dieksekusi:
+Bagi Anda yang ingin melanjutkan tongkat estafet pengembangan ke **v6.0.0**, berikut adalah beberapa ide fitur keren yang siap dieksekusi:
 
 1. 🌐 **Multi-Protocol Support (sACN / E1.31):** Menambahkan Streaming ACN (E1.31 multicast) berdampingan dengan Art-Net 4.
 2. 🎛️ **Multi-Universe Hardware Outputs (2–4 Universes):** Menghasilkan 2–4 port XLR fisik independen (1024–2048 channel) menggunakan periferal UART0/UART1/RMT ESP32.
@@ -116,7 +150,7 @@ Bagi Anda yang ingin melanjutkan tongkat estafet pengembangan ke **v5.0.0**, ber
 
 > Halo rekan-rekan sesama *developer*, *lighting designer*, teknisi panggung, mahasiswa, dan komunitas *DIY maker* di mana pun Anda berada! 👋✨
 
-Proyek **ESP32 Wireless Art-Net to DMX512 Node (ZZLIGHT)** ini saya rilis sepenuhnya sebagai **perangkat lunak dan desain perangkat keras Open Source (Apache License 2.0)**. Bagi saya pribadi, pengembangan inti modul ini telah **tuntas sampai versi v5.0.0** dan sudah terbukti sangat stabil serta siap pakai di panggung.
+Proyek **ESP32 Wireless Art-Net to DMX512 Node (ZZLIGHT)** ini saya rilis sepenuhnya sebagai **perangkat lunak dan desain perangkat keras Open Source (Apache License 2.0)**. Bagi saya pribadi, pengembangan inti modul ini telah **tuntas sampai versi v5.2.0** (Hardened Production Master) dan sudah terbukti sangat stabil serta siap pakai di panggung.
 
 ### 🚀 Silakan Banget untuk Fork & Kembangkan v6.0!
 Jika Anda memiliki ide untuk menambahkan fitur baru, mendesain custom PCB KiCad SMD, membuat versi multi-universe, atau menambahkan protokol sACN E1.31 untuk melahirkan **Versi 6 (v6.0.0)**:
