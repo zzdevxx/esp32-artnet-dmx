@@ -199,16 +199,25 @@ void DMXCoreTask(void *pvParameters) {
 
 ## 🚀 Quick Start: Flashing the Firmware
 
+### Metode 1: 1-Click Flash Otomatis (Rekomendasi Cepat)
+1. Hubungkan ESP32 DevKit V1 ke laptop menggunakan kabel data Micro-USB.
+2. Jalankan skrip flasher otomatis via PowerShell atau klik ganda `flash.bat`:
+   ```powershell
+   cd D:\ANDREAS\esp32-artnet-dmx
+   .\tools\flash.bat
+   ```
+   *Skrip otomatis mendeteksi port COM, memverifikasi biner terkompilasi di `build/`, dan melakukan flashing berkecepatan 921.600 baud via `esptool` dalam <10 detik.*
+
+### Metode 2: Kompilasi Manual via Arduino IDE 2.x
 1. Install **[Arduino IDE 2.x](https://www.arduino.cc/en/software)**.
-2. In Arduino IDE Settings, add ESP32 Board URL:
+2. Pada *Settings*, tambahkan URL Boards Manager:
    ```text
    https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
    ```
-3. Install **`esp32 by Espressif Systems`** via Boards Manager.
+3. Install package **`esp32 by Espressif Systems`** via Boards Manager.
 4. Install library **`LiquidCrystal_I2C by Frank de Brabander`** via Library Manager.
-5. Connect your ESP32 to PC with a Micro-USB cable.
-6. Select board **`DOIT ESP32 DEVKIT V1`** and the correct COM port.
-7. Open [`firmware/artnet_dmx_final.ino`](firmware/artnet_dmx_final.ino) and click **Upload**.
+5. Sambungkan ESP32 ke PC, pilih board **`DOIT ESP32 DEVKIT V1`** dan port COM terkait (misal `COM10`).
+6. Buka [`firmware/artnet_dmx_final.ino`](firmware/artnet_dmx_final.ino) dan klik **Upload**.
 
 ---
 

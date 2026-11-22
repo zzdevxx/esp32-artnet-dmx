@@ -22,8 +22,12 @@ Format pencatatan mengikuti standar industri [*Keep a Changelog*](https://keepac
   - Seluruh angka telemetri memakai `font-variant-numeric: tabular-nums` untuk mencegah layout shift. Setiap tombol mematuhi kontrak 5 state visual (default / hover / focus-visible / active / disabled).
 - **Two-Way Setup Navigation:**
   - Halaman `/monitor` kini menyediakan tautan kembali ke `/setup` (*bidirectional*), dipertahankan di mode RUN agar teknisi tetap dapat mencapai portal konfigurasi.
-- **Unified LCD Status Notifications:**
-  - Notifikasi LCD distandarkan ke frasa `Device Connect!` untuk konsistensi 100% di seluruh state; urutan boot LCD dibersihkan tanpa *glitch* device-connect.
+- **Unified LCD Status Notifications & Animation Scope Fix:**
+  - Notifikasi LCD distandarkan ke frasa `Device Connect!` untuk konsistensi 100% di seluruh state; urutan boot LCD dibersihkan tanpa *glitch* device-connect. Variabel animasi wave LCD (`lastAnimTime`, `animStep`) dideklarasikan secara global sebelum `setScreenState()`, mengeliminasi bloker kompilasi C++ dorman.
+- **Auto-Heal WiFi Reconnect & mDNS Persistence (F-001 & F-002):**
+  - Mode SoftAP kini otomatis mengaktifkan `WIFI_AP_STA` jika kredensial SSID tersimpan, memastikan modul dapat melakukan reconnect mandiri ke router panggung di latar belakang tanpa mengunci teknisi di AP mode. Saat berhasil reconnect, mDNS `zzlight.local` didaftarkan ulang dan modem sleep dipastikan nonaktif (`WiFi.setSleep(false)`).
+- **Proteksi Live Show pada `/reset` (F-003):**
+  - Endpoint `/reset` kini dilengkapi pengaman HTTP 409 Conflict yang menolak penghapusan NVS jika paket data DMX sedang aktif streaming (< 3 detik) untuk mencegah insiden panggung gelap akibat klik tak disengaja.
 
 ### 🧪 Verification
 - **Playwright Chrome E2E Test Suite** (`tools/test_web_playwright_chrome.py`):

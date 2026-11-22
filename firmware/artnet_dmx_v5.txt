@@ -93,6 +93,8 @@ ScreenState currentState = S_BOOT;
 unsigned long stateEnterTime = 0;
 unsigned long stateHoldDuration = 0;
 ScreenState pendingNextState = S_BOOT;
+unsigned long lastAnimTime = 0;
+int animStep = 0;
 
 // Function Prototypes
 void setScreenState(ScreenState newState, unsigned long holdDuration = 0, ScreenState nextState = S_BOOT);
@@ -459,7 +461,7 @@ void loop() {
     // Drain socket buffer to prevent packet starvation under burst traffic
     while ((packetSize = Udp.parsePacket()) > 0) {
       if (packetSize < 10) {
-        Udp.flush();
+        while (Udp.available()) Udp.read();
         continue;
       }
 
@@ -540,7 +542,6 @@ void loop() {
       if (millis() - wifiLostTime > 30000) {
         // Fallback to emergency AP without clearing NVS flash credentials
         setScreenState(S_WIFI_DISCONN2, 2000, S_AP_MODE);
-        startAP();
       } else {
         if (millis() - lastReconnectAttempt > 3000) {
           lastReconnectAttempt = millis();
@@ -554,12 +555,16 @@ void loop() {
       }
     }
   } else if (currentState == S_AP_MODE && ssid != "") {
-    // Background station reconnect check
+    // Background station reconnect check (Auto-heal from emergency AP fallback)
     if (WiFi.status() == WL_CONNECTED) {
       dnsServer.stop();
       WiFi.mode(WIFI_STA);
+      WiFi.setSleep(false);
+      MDNS.end();
+      MDNS.begin("zzlight");
       Udp.stop();
       Udp.begin(ARTNET_PORT);
+      wifiLostTime = 0;
       setScreenState(S_RUN);
     } else if (millis() - lastAPBackgroundScan > 15000) {
       lastAPBackgroundScan = millis();
@@ -586,6 +591,21 @@ void loop() {
 void sendArtPollReply(IPAddress remoteIP, uint16_t remotePort) {
   uint8_t reply[239];
   memset(reply, 0, sizeof(reply));
+
+  // Tentukan target IP yang valid (directed subnet broadcast jika remoteIP broadcast/unspecified)
+  IPAddress targetIP;
+  if (remoteIP == IPAddress(255, 255, 255, 255) || remoteIP == IPAddress(0, 0, 0, 0)) {
+    if (currentState == S_RUN) {
+      targetIP = IPAddress(WiFi.localIP()[0] | ~WiFi.subnetMask()[0],
+                           WiFi.localIP()[1] | ~WiFi.subnetMask()[1],
+                           WiFi.localIP()[2] | ~WiFi.subnetMask()[2],
+                           WiFi.localIP()[3] | ~WiFi.subnetMask()[3]);
+    } else {
+      targetIP = IPAddress(192, 168, 4, 255);
+    }
+  } else {
+    targetIP = remoteIP;
+  }
 
   // 1. Header & OpCode (0x2100 Little-Endian)
   memcpy(reply, ARTNET_HEADER_TAG, 8);
@@ -644,7 +664,7 @@ void sendArtPollReply(IPAddress remoteIP, uint16_t remotePort) {
   reply[212] = 0x08; // Status2: 15-bit Port-Address support
 
   // Kirim balasan ke Art-Net Port resmi (6454)
-  Udp.beginPacket(remoteIP, ARTNET_PORT);
+  Udp.beginPacket(targetIP, ARTNET_PORT);
   Udp.write(reply, sizeof(reply));
   Udp.endPacket();
 }
@@ -675,8 +695,13 @@ String escapeJsonString(const String& input) {
 
 // Activate standalone Access Point mode
 void startAP() {
-  WiFi.mode(WIFI_AP);
+  if (ssid != "") {
+    WiFi.mode(WIFI_AP_STA); // Retain STA interface so background reconnect continues
+  } else {
+    WiFi.mode(WIFI_AP);
+  }
   WiFi.softAP("ARTNET-DMX", "andreas123");
+  WiFi.setSleep(false);
   connectedDevices = 0;
 
   dnsServer.stop();
@@ -699,12 +724,13 @@ void connectWiFi() {
   WiFi.begin(ssid.c_str(), pass.c_str());
 
   unsigned long startT = millis();
-  while (WiFi.status() != WL_CONNECTED && millis() - startT < 6000) {
+  while (WiFi.status() != WL_CONNECTED && millis() - startT < 8000) {
     delay(100);
   }
 
   if (WiFi.status() == WL_CONNECTED) {
     dnsServer.stop(); // Matikan captive portal di mode RUN
+    MDNS.end();
     MDNS.begin("zzlight");
 
     Udp.stop();
@@ -714,7 +740,6 @@ void connectWiFi() {
     setScreenState(S_RUN);
   } else {
     setScreenState(S_WIFI_FAIL, 2500, S_AP_MODE);
-    startAP();
   }
 }
 
@@ -798,12 +823,16 @@ void registerWebRoutes() {
     WiFi.scanDelete();
     int n = WiFi.scanNetworks(false, true);
     String json = "[";
+    bool hasEntry = false;
     for (int i = 0; i < n; ++i) {
-      if (i > 0) json += ",";
+      String netSSID = WiFi.SSID(i);
+      if (netSSID.length() == 0) continue; // Abaikan SSID tersembunyi / kosong
+      if (hasEntry) json += ",";
+      hasEntry = true;
       int dbm = WiFi.RSSI(i);
       int quality = (dbm <= -100) ? 0 : ((dbm >= -50) ? 100 : 2 * (dbm + 100));
       bool secure = WiFi.encryptionType(i) != WIFI_AUTH_OPEN;
-      json += "{\"ssid\":\"" + escapeJsonString(WiFi.SSID(i)) + "\",\"sec\":" + String(secure ? "true" : "false") + ",\"sig\":" + String(quality) + "}";
+      json += "{\"ssid\":\"" + escapeJsonString(netSSID) + "\",\"sec\":" + String(secure ? "true" : "false") + ",\"sig\":" + String(quality) + "}";
     }
     json += "]";
     server.sendHeader("Access-Control-Allow-Origin", "*");
@@ -834,6 +863,11 @@ void registerWebRoutes() {
   });
 
   server.on("/reset", HTTP_POST, []() {
+    // PROTEKSI LIVE SHOW: Blokir reset WiFi jika data DMX aktif sedang diterima (< 3 detik)
+    if (currentState == S_RUN && hasReceivedFirstPacket && (millis() - lastArtNetTime < 3000)) {
+      server.send(409, "text/plain", "Conflict: Active DMX streaming. Stop FOH console before reset.");
+      return;
+    }
     server.send(200, "text/plain", "OK");
     prefs.begin("wifi_data", false);
     prefs.clear();
@@ -918,9 +952,6 @@ void setScreenState(ScreenState newState, unsigned long holdDuration, ScreenStat
   }
 }
 
-static unsigned long lastAnimTime = 0;
-static int animStep = 0;
-
 void handleLCDAnimation() {
   // Transisi State Otomatis Non-Blocking
   if (stateHoldDuration > 0 && (millis() - stateEnterTime >= stateHoldDuration)) {
@@ -928,7 +959,6 @@ void handleLCDAnimation() {
     if (pendingNextState == S_CONNECTING) {
       if (ssid == "") {
         setScreenState(S_WIFI_ERR, 2000, S_AP_MODE);
-        startAP();
       } else {
         connectWiFi();
       }
