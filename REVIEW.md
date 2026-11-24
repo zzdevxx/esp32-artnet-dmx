@@ -3,7 +3,7 @@
 **Pengembang:** Andreas Restuawanta Christwara (NIM: 5312422036)  
 **Program Studi:** Teknik Komputer, Universitas Negeri Semarang (UNNES)  
 **Status Evaluasi:** Production-Ready / Grade A (Layak Uji & Skripsi)  
-**Dokumen Terkait:** [PRD.md](PRD.md) | [README.md](README.md) | [CHANGELOG.md](CHANGELOG.md) | [REPORT.pdf](REPORT.pdf)
+**Dokumen Terkait:** [PRD.md](PRD.md) | [README.md](README.md) | [CHANGELOG.md](CHANGELOG.md) | [REPORT.pdf](docs/REPORT.pdf)
 
 ---
 
@@ -13,9 +13,9 @@
 |:---|:---:|:---|
 | **[`PRD.md`](PRD.md)** | Dokumen PRD (11.4 KB) | Dokumen spesifikasi teknis resmi, kontrak antarmuka hardware/software, dan kriteria penerimaan. |
 | **[`README.md`](README.md)** | Panduan (17.5 KB) | Tutorial komprehensif 8 bab dengan indeks gambar terstruktur dan panduan pengoperasian. |
-| **[`REPORT.pdf`](REPORT.pdf)** | Laporan PDF (19.8 MB) | Laporan penelitian akademik formal UNNES dengan 58 visual, running header-footer, dan evaluasi performa. |
+| **[`docs/REPORT.pdf`](docs/REPORT.pdf)** | Laporan PDF (19.8 MB) | Laporan penelitian akademik formal UNNES dengan 58 visual, running header-footer, dan evaluasi performa. |
 | **[`CHANGELOG.md`](CHANGELOG.md)** | Log Riwayat (13.9 KB) | Catatan evolusi arsitektur firmware dari PoC v1.0 hingga rilis stabil Hardened Production Master v5.2.0. |
-| **[`RESULT.png`](RESULT.png)** | Banner 16:9 (963.4 KB) | Banner live setup (Acer Swift 3, Box X4 presisi, dan 4 PAR LED ungu, merah, oranye, hijau). |
+| **[`images/RESULT.png`](images/RESULT.png)** | Banner 16:9 (963.4 KB) | Banner live setup (Acer Swift 3, Box X4 presisi, dan 4 PAR LED ungu, merah, oranye, hijau). |
 | **[`images/`](images/)** | Katalog (22 Gambar) | 22 berkas gambar alat dan bahan berlatar belakang putih bersih murni (`#FFFFFF`). |
 | **[`schematics/`](schematics/)** | Diagram (5 Berkas) | Diagram blok sistem, skematik wiring, timing DMX512-A, arsitektur FreeRTOS, dan flowchart LCD (300 DPI). |
 | **[`docs/`](docs/)** | Galeri Foto (30 Foto) | Dokumentasi visual asli tahapan fabrikasi komponen, pelubangan box X4, penyolderan, dan uji coba fixture. |

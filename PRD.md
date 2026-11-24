@@ -65,10 +65,10 @@ Membangun modul konverter node **Art-Net to DMX512 nirkabel mandiri** yang:
 
 | Indeks Visual | Nama Berkas | Lokasi File | Deskripsi & Peran Arsitektural |
 |:---:|:---|:---|:---|
-| **Gambar 1.1** | `RESULT.png` | `C:\ANDREAS\esp32-artnet-dmx\RESULT.png` | Banner Hasil Akhir 16:9 (Laptop Acer Swift 3, Box X4, & 4 PAR LED Ungu, Merah, Oranye, Hijau) |
-| **Gambar 2.1 – 2.22** | 22 Berkas Katalog | `C:\ANDREAS\esp32-artnet-dmx\images\` | Katalog Alat dan Bahan Berlatar Belakang Putih Murni (`#FFFFFF`) |
-| **Gambar 3.1 – 3.5** | 5 Berkas Skematik | `C:\ANDREAS\esp32-artnet-dmx\schematics\` | Diagram Blok Sistem, Skematik Wiring, Timing DMX512, FreeRTOS SMP, & Flowchart LCD |
-| **Gambar 4.1 – 4.30** | 30 Foto Fabrikasi | `C:\ANDREAS\esp32-artnet-dmx\docs\` | Dokumentasi Autentik Perakitan Fisik, Pelubangan Box X4, Penyolderan, & Uji Coba |
+| **Gambar 1.1** | `RESULT.png` | `images/RESULT.png` | Banner Hasil Akhir 16:9 (Laptop Acer Swift 3, Box X4, & 4 PAR LED Ungu, Merah, Oranye, Hijau) |
+| **Gambar 2.1 – 2.22** | 22 Berkas Katalog | `images/` | Katalog Alat dan Bahan Berlatar Belakang Putih Murni (`#FFFFFF`) |
+| **Gambar 3.1 – 3.5** | 5 Berkas Skematik | `schematics/` | Diagram Blok Sistem, Skematik Wiring, Timing DMX512, FreeRTOS SMP, & Flowchart LCD |
+| **Gambar 4.1 – 4.30** | 30 Foto Fabrikasi | `docs/` | Dokumentasi Autentik Perakitan Fisik, Pelubangan Box X4, Penyolderan, & Uji Coba |
 
 ---
 

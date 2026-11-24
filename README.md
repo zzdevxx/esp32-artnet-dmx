@@ -11,8 +11,8 @@
 ---
 
 ## 📁 Visual Assets & Documentation Links
-* 🎬 **[RESULT.png](RESULT.png)** — Live stage setup banner (Acer Swift 3 running QLC+, Box X4 enclosure, 4 PAR LED 54-eye fixtures).
-* 📄 **[REPORT.pdf](REPORT.pdf)** — Complete PDF project report with all 58 indexed figures, schematics, and build logs.
+* 🎬 **[RESULT.png](images/RESULT.png)** — Live stage setup banner (Acer Swift 3 running QLC+, Box X4 enclosure, 4 PAR LED 54-eye fixtures).
+* 📄 **[REPORT.pdf](docs/REPORT.pdf)** — Complete PDF project report with all 58 indexed figures, schematics, and build logs.
 * 📦 **[images/](images/)** — Catalog of 22 hardware tools & components.
 * 📐 **[schematics/](schematics/)** — 5 High-resolution engineering schematics & architecture diagrams (300 DPI).
 * 📸 **[docs/](docs/)** — 30 Step-by-step fabrication & testing photos.
@@ -98,7 +98,7 @@ Total estimated cost to build this module is under **\$10 / Rp 150.000**. Here a
 | 21 | **Soldering Flux Paste** | Rosin Soldering Flux Grease Paste | Clean & High-Quality Solder Joints |
 | 22 | **Craft Scissors** | Sharp Stainless Steel Scissors | Cable & Heat-Shrink Trimming |
 
-*(All component photos are accessible in the [`images/`](images/) folder and indexed in [`REPORT.pdf`](REPORT.pdf)).*
+*(All component photos are accessible in the [`images/`](images/) folder and indexed in [`REPORT.pdf`](docs/REPORT.pdf)).*
 
 ---
 

@@ -90,11 +90,11 @@ Format pencatatan mengikuti standar industri [*Keep a Changelog*](https://keepac
 - **Fail-Safe & Safety Protections:**
   - **Blackout Safety Timeout (10 Detik):** Pelacakan `lastArtNetTime` otomatis mengosongkan seluruh 512 slot DMX menjadi nilai `0` jika software pengendali di laptop mati/terputus, mencegah panas berlebih pada fixture.
 - **Suite Visual Terindeks Lengkap (58 Visual):**
-  - 1 Master Result Banner 16:9 (`RESULT.png` — Gambar 1.1).
+  - 1 Master Result Banner 16:9 (`images/RESULT.png` — Gambar 1.1).
   - 22 Gambar Katalog Alat dan Bahan Putih Bersih (`images/` — Gambar 2.1 s/d 2.22).
   - 5 Skematik dan Diagram Arsitektur 300 DPI (`schematics/` — Gambar 3.1 s/d 3.5).
   - 30 Foto Fabrikasi Fisik Autentik (`docs/` — Gambar 4.1 s/d 4.30).
-  - Laporan Riset Formal Komprehensif (`REPORT.pdf`).
+  - Laporan Riset Formal Komprehensif (`docs/REPORT.pdf`).
 
 ---
 
