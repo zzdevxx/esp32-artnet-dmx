@@ -1,0 +1,111 @@
+saya mau membuat ARTNET-DMX Module
+
+bahan, esp32 devkitv1, max485 to rs485, xlr 3pin, lcd16x2, dan i2c
+wiring, esp32 ke max485, vin ke vcc, gnd ke gnd, d4 ke de re, tx2 atau d17 ke di, rx2 atau d16 ke ro (tidak dipakai), max485 to xlr, gnd ke 1, a ke 3, b ke 2, esp32 ke lcd 16x2 i2c, vin ke vcc, gnd ke gnd, d21 ke sda, d22 ke scl
+
+tampilan lcd dan program utama
+screen 1, boot screen, persiapan sistem untuk masuk ke frontend dan backend program selanjutnya, tampilannya begini, line atas, ZZLIGHT, mulai dari kotak ke 6 dari kiri, line bawah, PROJECT, mulai dari kotak ke 6 dari kiri, jadi seakan akan ada di tengah lcd 16x2, animasi nya typping effect, tulisan muncul satu satu dari kiri ke kanan, durasi 3 detik
+screen 2, connect screen, screen ini untuk beberapa case, case pertama, setelah boot, esp32 akan melakukan connecting ke wifi, muncul screen ini, kalau gagal, akan masuk ke screen 3 wifi not connect screen , kalau berhasil, akan masuk ke screen 7 module connect2 screen lanjut masuk screen 4 wifi setup screen, case kedua, di mode ap, device akan melakukan connecting ke hotspot esp32, muncul screen ini, kalau berhasil, akan masuk ke screen 5 device connect screen, tampilannya begini, line atas, Connecting..., line bawah kosong, durasi menyesuaikan, minimal 3 detik
+screen 3, wifi not connect screen, jika modul baru pertama kali nyala, atau sebelumnya belum pernah konek wifi sama sekali, ataupun sudah pernah konek dan menyimpan wifi, tapi pindah lokasi, jadi tidak bisa konek dengan wifi yang tersimpan atau otomatis akan ganti wifi, tampilannya begini, line atas, WiFi Not Connect!, line bawah, Connecting..., durasi 3 detik, selanjutnya masuk ke screen 4 wifi setup screen atau mode ap
+screen 4, wifi setup screen, esp32 menyediakan hotspot untuk konfigurasi wifi dan bisa langsung pake artnet, laptop kirim signal ke esp32 lewat hostpot, langsung kirim ke lampu, tampilannya begini, line atas, ARTNET-DMX, ada animasi looping 6 step, ARTNET-DMX, ARTNET-DMX ), ARTNET-DMX )), ARTNET-DMX ))), ARTNET-DMX )))), ARTNET-DMX ))))), usahakan agar tidak flicker dan kedip, dibuat smooth aja, , line bawah, 192.168.4.1, alamat tersebut untuk konfigurasi wifi dan monitor, bisa dibuka di hp/laptop, tambah /monitor untuk buka web monitor, tambah /setup untuk buka konfigurasi wifi, isinya nanti kusampaikan di bawah, durasi menyesuaikan, sampai device connect ke hotspot esp32 dan ep32 connect ke wifi
+screen 5, device connect screen, muncul ketika device konek ke hotspot esp32, tulisannya begini, line atas, Device Connect!, line bawah, Loading..., , durasi 3 detik, setelah device konek, selanjutnya bakal balik lagi ke screen 4 wifi setup screen atau mode ap
+screen 6, module connect1 screen, muncul ketika esp32 connect ke wifi setelah connect dari web hotspot, stelah itu module melakukan reboot, tulisannya line atas, Module Connect!, line bawah Rebooting..., , durasi 3 detik, kalau sudah konek ke wifi, selanjutnya reboot dulu dan masuk ke boot screen
+screen 7, module connect2 screen, muncul ketika esp32 connect ke wifi setelah connect screen, kayak autoconnect gitu, alurnya dari reboot, boot screen, connect screen, baru screen ini, lanjut run screen, tulisannya line atas, Module Connect!, line bawah Loading..., , durasi 3 detik kalau sudah konek ke wifi, selanjutnya masuk ke screen 8
+screen 8, run screen, mode run standby dan looping, tulisannya begini, line atas, ARTNET-DMX, ada animasi looping 6 step, ARTNET-DMX, ARTNET-DMX >, ARTNET-DMX >>, ARTNET-DMX >>>, ARTNET-DMX >>>>, ARTNET-DMX >>>>>, usahakan agar tidak flicker dan kedip, dibuat smooth aja, line bawah, 192.168.X.X, durasi screen ini akan lama karena looping terus menerus, kecuali ada case di screen 9 dan 10
+screen 9, wifi reset, ketika tombol reset di webserver ditekan, akan muncul screen ini dulu di lcd, selanjutnya module akan melakukan reboot, lalu masuk connect screen, wifi not connect screen, wifi setup screen atau mode ap,  tulisannya begini, line atas, WiFi Reset!, line bawah, Rebooting..., durasi 3 detik, setelah itu reboot dan sesuai alur tadi, ujungnya tetap ke screen 4 wifi setup screen, karena akan konfigurasi ulang wifi
+screen 10, wifi disconnect1, ketika wifi putus atau mati <30 detik, akan muncul screen ini, tulisannya begini, line atas, WiFi Disconnect!, line bawah, Reconnecting...,  misal putus <30 detik, akan reconnect terus menerus, dan durasi screen ini 30 detik, kalau reconnect berhasil, masuk run screen, kalau reconnect tidak berhasil, masuk ke screen 11
+screen 10, wifi disconnect2, ketika wifi putus atau mati >30 detik, akan muncul screen ini, tulisannya begini, line atas, WiFi Disconnect!, line bawah, Rebooting,  misal putus >30 detik, akan muncul screen ini, module akan melakukan reboot, alur sesuai yg diatas, sama seperti wifi reset, ujungnya akan ke mode ap untuk konfigurasi wifi
+screen 11, wifi failed, ketika salah memasukkan password wifi, akan muncul screen ini, tulisannya begini, WiFi Failed!, line bawah, Wrong Password..., durasi 3 detiik, setelah itu kembali ke screen 4 wifi setup screen, karena akan konfigurasi ulang wifi
+
+nama hotspot esp32, ARTNET-DMX, passwordnya, andreas123
+
+ketika esp32 konek dengan wifi, tampil module connect1 screen dulu, baru kemudian melakukan reboot, boot screen, connect screen, module connect2 screen, run mode screen
+ketika click tombol wifi reset di web monitor, wifi reset screen, module akan melakukan reboot, boot screen, connect screen, wifi not connect screen, wifi setup screen atau mode ap
+ketika wifi disconnect, sama seperti diatas, >30 detik, module akan melakukan reset wifi dan rebooting dari awal, ujungnya ke mode ap untuk konfigurasi ulang wifi
+
+tampian webserver setup atau mode ap (device connect ke esp32)
+bisa dibuka saat mode ap saja, alamat 192.168.4.1 atau direct ke 192.168.4.1/setup
+
+background gelap, tulisan dan konten rata tengah
+
+nama tab di chrome, ARTNET-DMX Setup
+
+header, font tebal dan miring, pake font black italic mungkin
+tulisan ZZLIGHT PROJECT
+
+ada text box, isinya daftar wifi yang tersedia di sekitar
+layoutnya, rata kiri, ada logo wifi dan nama wifi, untuk rata kanan, ada logo gembok dan kekuatan wifi 0-100%
+ada fitur autofill, klik salah satu wifi, otomatis kolom ssid akan terisi otomatis, tinggal masukin password, jika wifi open, tetap harus tekan tombol connect, wajib
+lalu  dibawah ada tombol refresh warna oranye
+
+ada 2 kotak putih, tulisannya SSID dan Password
+lalu dibawah ada tombol connect warna hijau
+
+paling bawah ada tulisan Monitor, akan ke alamat 192.168.4.1/monitor, tulisan tipis warna abu abu
+
+tampian webserver connect (esp32 connect ke wifi)
+tampilan twerbuka setelah klik tombol connect di mode ap, alamat 192.168.4.1/connect
+
+background gelap, tulisan dan konten rata tengah
+
+header, font tebal dan miring, pake font black italic mungkin
+tulisan ZZLIGHT PROJECT
+bawahnya ada tulisan, SSID and Password Saved, Rebooting...
+
+untuk komposisi layout sesuaikan aja
+
+tampian webserver monitor atau mode direct atau mode ap (device connect ke esp32)
+bisa dibuka ketika mode ap saja, alamat 192.168.4.1/monitor
+tampilan sama seperti tampian webserver monitor atau mode wifi atau mode run (device dan esp32 di jaringan yang sama), tapi ada yang beda sedikit, di bagian ini
+
+Wifi : Nama Hotspot
+Status : Connected (hijau) / Disconnected (merah)
+Strength : Direct Mode
+DMX : Active (hijau) / No Signal (kuning) / Loss Signal (merah)
+
+tidak pakai tombol wifi reset
+
+paling bawah, ada tulisan Setup, akan ke alamat 192.168.4.1/setup, tulisan tipis warna abu abu
+
+tampian webserver monitor atau mode wifi atau mode run (device dan esp32 di jaringan yang sama)
+bisa dibuka ketika mode run saja, alamat 192.168.X.X, atau zzlight.local
+
+background gelap, tulisan dan konten rata tengah semua
+
+nama tab di chrome, ARTNET-DMX Monitor
+
+header, font tebal dan miring, pake font black italic mungkin
+tulisan ZZLIGHT PROJECT
+
+keterangan, kotak atau textbox
+Date : Day, XX Moon XXXX
+Time : XX:XX:XX
+IP : 192.168.X.X
+Wifi : Nama Wifi
+Status : Connected (hijau) / Disconnected (merah)
+Strength : -XX dBm (Good) hijau / -XX dBm (Medium) kuning / -XX dBm (Waeak) merah
+DMX : Active (hijau) / No Signal (kuning) / Loss Signal (merah)
+
+active 0-<1 detik, no signal 1-<10 detik, loss signal >10 detik
+tanggal sekarang, misal senin, 24 september 2027
+waktu sekarang, misal 10:37:23, format 24 jam
+antara tulisan sebelum titik dua kasih tab, antara setelah titik dua dan tulisan kasih spasi satu kali
+teks nya berwarna, sesuaikan aja
+ketika halaman di refresh manual, konten setelah titik dua, tulisannya begini, Loading...
+
+2 tombol, ada atas dan bawah, panjang sesuaikan dengan text box, berwarna juga
+reset, tulisannya begini, WiFi Reset, masuk screen 8 dulu, setelah itu masuk screen 3, mode ap, tombol warna merah
+pop up, tulisannya begini, Reset WiFi?
+reboot, tulisannya begini, Module Reboot, restart module, mulai dari awal boot screen, tombol warna oranye
+pop up, tulisannya begini, Reboot Module?
+ketika klik tombol, ada popup konfirmasi
+
+untuk komposisi layout sesuaikan aja
+update halaman realtime
+
+saya pake pake board esp32 versi terbaru 3.3.8
+
+program module ini ada artnet to dmx, lcd monitor, webserver hotspot, webserver monitor, wifi manager, auto reconnect wifi, dmx always on, blackout if no signal, 
+optimalkan untuk engine dmx agar tidak banyak delay saat tombol trigger scene atau chase ditekan di qlc+ serta all systemnya
+
+gasspolll buat source code yang kompleks dan minim bug dan sesuai request saya diatas!

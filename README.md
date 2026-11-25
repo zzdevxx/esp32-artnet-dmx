@@ -22,15 +22,17 @@
 
 ---
 
-## 🌐 Ekosistem Riset & Pengembangan ZZLUXORA (Tritunggal Sistem)
+## Ekosistem Riset & Pengembangan ZZLUXORA (4 Repositori Terhubung)
 
 Proyek ini merupakan modul perangkat keras penerima dari ekosistem riset terintegrasi **ZZLUXORA**:
 
 | Komponen | Repositori | Peran & Deskripsi |
 |---|---|---|
-| ⚡ **Hardware Node** | [**`zzdevxx/esp32-artnet-dmx`**](https://gitlab.com/zzdevxx/esp32-artnet-dmx) *(Repo Ini)* | Prototipe perangkat keras konverter nirkabel Art-Net ke DMX512 berbasis ESP32 Dual-Core (FreeRTOS SMP Core 0 DMX / Core 1 WiFi), transceiver RS-485 MAX485, LCD 16x2 I2C, dan boks fabrikasi Box X4 DIY. |
-| 🎛️ **Software Konsol** | [**`zzdevxx/zzluxora-v10`**](https://gitlab.com/zzdevxx/zzluxora-v10) | Perangkat lunak konsol pencahayaan panggung cerdas (Python 3.10+, PySide6/Qt6, NumPy STFT/MIR Core Engine, grandMA3 style mixer 513 fader, 2D/3D stage visualizer, Art-Net 4 DMX512 UDP transmitter). |
-| 🎓 **Naskah & Riset** | [**`zzdevxx/zzluxora-thesis`**](https://gitlab.com/zzdevxx/zzluxora-thesis) | Naskah akademik skripsi S1 Teknik Komputer FT UNNES, pemodelan matematis STFT Hann & Russell 2D, protokol uji lapangan 41-kolom, instrumen evaluasi (SUS & Kesesuaian), serta draf ilmiah Bab 1–5 lengkap. |
+| **Hardware Node** | [**`zzdevxx/esp32-artnet-dmx`**](https://gitlab.com/zzdevxx/esp32-artnet-dmx) *(Repo Ini)* | Prototipe perangkat keras konverter nirkabel Art-Net ke DMX512 berbasis ESP32 Dual-Core (FreeRTOS SMP Core 0 DMX / Core 1 WiFi), transceiver RS-485 MAX485, LCD 16x2 I2C, dan boks fabrikasi Box X4 DIY. |
+| **Software Konsol** | [**`zzdevxx/zzluxora`**](https://github.com/zzdevxx/zzluxora) | Perangkat lunak konsol pencahayaan panggung cerdas (Python 3.10+, PySide6/Qt6, NumPy STFT/MIR Core Engine, grandMA3 style mixer 513 fader, 2D/3D stage visualizer, Art-Net 4 DMX512 UDP transmitter). |
+| **Library Fixture** | [**`zzdevxx/zz-fixture`**](https://github.com/zzdevxx/zz-fixture) | Katalog profil fixture pencahayaan `.qxf` & `.zfx`, showfile template, serta skema parameter DMX 3-8 channel yang sinkron dengan engine ZZLUXORA. |
+| **Naskah & Riset** | [**`zzdevxx/zzluxora-thesis`**](https://gitlab.com/zzdevxx/zzluxora-thesis) | Naskah akademik skripsi S1 Teknik Komputer FT UNNES, pemodelan matematis STFT Hann & Russell 2D, protokol uji lapangan 41-kolom, instrumen evaluasi (SUS & Kesesuaian), serta draf ilmiah Bab 1-5 lengkap. |
+| **Portal Unduhan** | [**`zzdree.my.id/zzluxora/`**](https://zzdree.my.id/zzluxora/) | Halaman portal rilis resmi ZZLUXORA v10.0 (`ZZLUXORA-Setup-10.0.0.exe`) dan simulator interaktif RGBW DMX512 ([`zzdevxx/zzluxora-download`](https://github.com/zzdevxx/zzluxora-download)). |
 
 ---
 
@@ -57,7 +59,7 @@ Proyek ini merupakan modul perangkat keras penerima dari ekosistem riset terinte
   - **Core 0 (Dedicated DMX):** Generates strict USITT DMX512-A serial timing (Break $\ge 88\,\mu\text{s}$, MAB $\ge 8\,\mu\text{s}$) with a **43.07 Hz nominal refresh** (period $23220\,\mu\text{s}$). Pacing uses an absolute `esp_timer` deadline, so the average period is stable; per-frame jitter is bounded by the 1 ms FreeRTOS tick and has not yet been measured with an oscilloscope.
   - **Core 1 (Networking & UI):** Handles Art-Net UDP (Port 6454), Captive Portal DNS (Port 53), HTTP WebServer (Port 80), and NVS flash storage.
 - **🔄 Atomic Triple-Buffering (Lock-Free Memory Exchange):**
-  - Thread-safe pointer swapping between `tx`, `ready`, and `rx` buffers protected by an atomic spinlock (`portENTER_CRITICAL`), with each buffer exclusively owned by one role (transmit / ready / receive). A writer never touches a buffer being transmitted — totally eliminating frame tearing and stage light flicker.
+  - Thread-safe pointer swapping between `tx`, `ready`, and `rx` buffers protected by an atomic spinlock (`portENTER_CRITICAL`), with each buffer exclusively owned by one role (transmit / ready / receive). A writer never touches a buffer being transmitted, totally eliminating frame tearing and stage light flicker.
 - **📱 Smart Captive Portal (Auto Pop-up):**
   - When disconnected from WiFi, the node automatically broadcasts an Access Point (`ARTNET-DMX` at `192.168.4.1`). Connecting with any smartphone (Android/iOS) or PC instantly opens the web setup portal.
 - **📟 11-State Machine 16x2 LCD Display:**
@@ -239,7 +241,7 @@ The node accepts standard **Art-Net 4 DMX packets (OpCode `0x5000`) on UDP Port 
 * **[grandMA3 onPC](https://www.malighting.com/):** Go to *Menu* ➔ *Network* ➔ *DMX Protocols* ➔ *Art-Net* (Enabled).
 * **[Resolume Arena](https://resolume.com/):** Go to *Preferences* ➔ *DMX* ➔ Add Lumiverse ➔ Target Node IP.
 * **[TouchDesigner](https://derivative.ca/):** Use `DMX Out CHOP` in Art-Net mode.
-* **[ZZLUXORA](https://github.com/zzdevxx):** Automated audio-reactive AI lighting control engine.
+* **[ZZLUXORA](https://zzdree.my.id/zzluxora/):** Automated audio-reactive lighting control console ([GitHub `zzdevxx/zzluxora`](https://github.com/zzdevxx/zzluxora)).
 
 ---
 
