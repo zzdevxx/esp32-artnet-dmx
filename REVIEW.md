@@ -1,4 +1,4 @@
-# 📑 Architectural & Technical Review: ESP32 Art-Net to DMX512 Converter Module
+# Architectural & Technical Review: ESP32 Art-Net to DMX512 Converter Module
 **Proyek:** Modul Hardware Wireless Art-Net Node (ZZLIGHT PROJECT)  
 **Pengembang:** Andreas Restuawanta Christwara (NIM: 5312422036)  
 **Program Studi:** Teknik Komputer, Universitas Negeri Semarang (UNNES)  
@@ -7,7 +7,7 @@
 
 ---
 
-## 1. 📁 Ringkasan Berkas dalam Workspace & Status Integritas
+## 1. Ringkasan Berkas dalam Workspace & Status Integritas
 
 | Berkas / Direktori | Tipe & Ukuran | Deskripsi & Peran Fungsional |
 |:---|:---:|:---|
@@ -19,11 +19,11 @@
 | **[`images/`](images/)** | Katalog (22 Gambar) | 22 berkas gambar alat dan bahan berlatar belakang putih bersih murni (`#FFFFFF`). |
 | **[`schematics/`](schematics/)** | Diagram (5 Berkas) | Diagram blok sistem, skematik wiring, timing DMX512-A, arsitektur FreeRTOS, dan flowchart LCD (300 DPI). |
 | **[`docs/`](docs/)** | Galeri Foto (30 Foto) | Dokumentasi visual asli tahapan fabrikasi komponen, pelubangan box X4, penyolderan, dan uji coba fixture. |
-| **[`firmware/artnet_dmx_final.ino`](firmware/artnet_dmx_final.ino)** | Kode Produksi (25.1 KB) | Source code firmware utama (Dual-Core FreeRTOS SMP, Lock-Free Triple Buffering, Captive Portal, LCD 16x2) — v5.2.0 Hardened Production Master. |
+| **[`firmware/artnet_dmx_final.ino`](firmware/artnet_dmx_final.ino)** | Kode Produksi (25.1 KB) | Source code firmware utama (Dual-Core FreeRTOS SMP, Lock-Free Triple Buffering, Captive Portal, LCD 16x2) - v5.2.0 Hardened Production Master. |
 
 ---
 
-## 2. 🔬 Evaluasi Komparatif Firmware (v1.0 s/d Hardened Master v5.2.0)
+## 2. Evaluasi Komparatif Firmware (v1.0 s/d Hardened Master v5.2.0)
 
 | Parameter Arsitektur | Firmware v1.0 (PoC) | Firmware v2.0 | Firmware v3.0 | Firmware Final (v5.2.0) | Evaluasi Teknik |
 |:---|:---:|:---:|:---:|:---:|:---|
@@ -41,7 +41,7 @@ Evaluasi komparatif di atas merujuk pada **analisis desain & kode**. Angka perfo
 
 ---
 
-## 3. ⚡ Analisis Integritas Sinyal & Hardware RS-485
+## 3. Analisis Integritas Sinyal & Hardware RS-485
 
 ```text
 ┌─────────────────┐      UART2 (3.3V Logic)      ┌──────────────────┐     RS-485 Differential      ┌──────────────────┐
@@ -60,7 +60,7 @@ Evaluasi komparatif di atas merujuk pada **analisis desain & kode**. Angka perfo
 
 ---
 
-## 4. 🛡️ Failure Mode and Effects Analysis (FMEA) Matrix
+## 4. Failure Mode and Effects Analysis (FMEA) Matrix
 
 | No | Modus Kegagalan (*Failure Mode*) | Dampak (*Impact*) | Tingkat Keparahan (*Severity*) | Mekanisme Pencegahan / Pemulihan (*Mitigation*) |
 |:--:|:---|:---|:---:|:---|
@@ -72,6 +72,6 @@ Evaluasi komparatif di atas merujuk pada **analisis desain & kode**. Angka perfo
 
 ---
 
-## 5. 🎯 Kesimpulan Review & Status Kelaikan
+## 5. Kesimpulan Review & Status Kelaikan
 
 Berdasarkan hasil pengujian teknis laboratorium, analisis integritas sinyal berbasis perhitungan teori & software-in-the-loop, pengujian fungsionalitas Captive Portal lintas platform, dan keandalan proteksi blackout 10 detik, modul hardware **ESP32 Art-Net to DMX512 Converter (ZZLIGHT PROJECT)** dinyatakan **LULUS UJI DENGAN PREDIKAT PRODUCTION-READY (GRADE A)** dan siap diajukan untuk sidang skripsi maupun penerapan nyata di panggung. Verifikasi osiloskop/logic analyzer untuk jitter DMX fisik dijadwalkan pada pengujian lapangan FASE 6 di Gereja GIA Deliksari.

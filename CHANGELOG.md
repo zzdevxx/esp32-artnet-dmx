@@ -1,4 +1,4 @@
-# 📋 Changelog & Development Roadmap — ESP32 Art-Net to DMX512 Node (ZZLIGHT)
+# Changelog & Development Roadmap - ESP32 Art-Net to DMX512 Node (ZZLIGHT)
 
 Dokumentasi komprehensif riwayat perancangan, evolusi kode firmware (v1.0 s/d v5.2.0 Hardened Production Master), aset visual panggung terindeks, serta pesan hangat bagi komunitas maker, pengembang, dan kontributor (*forks & pull requests*).
 
@@ -10,10 +10,10 @@ Format pencatatan mengikuti standar industri [*Keep a Changelog*](https://keepac
 
 ---
 
-## 🌟 [v5.2.0] — Hardened Production Master (`firmware/artnet_dmx_final.ino`) — 2026-11
+## [v5.2.0] - Hardened Production Master (`firmware/artnet_dmx_final.ino`) - 2026-11
 *Hardened Master: Single-Pass Web Route Registration, Verified ArtPollReply Byte Offsets (Art-Net 4 Spec), Tabular Numerals & 5-State Interactive Web UI Contract, Two-Way Setup Navigation, Unified LCD Status Notifications, Full-English UI, and Cross-Platform Playwright E2E Test Suite.*
 
-### 🛡️ Hardening & Correctness
+### Hardening & Correctness
 - **Single-Pass Web Route Registration (`registerWebRoutes()`):**
   - Seluruh rute WebServer kini didaftarkan **tepat satu kali** di `setup()`, menghilangkan potensi *route shadowing* saat reconnect ulang. Struktur terpusat memudahkan audit permukaan HTTP.
 - **ArtPollReply Byte-Offset Verified (Art-Net 4 Spec):**
@@ -29,7 +29,7 @@ Format pencatatan mengikuti standar industri [*Keep a Changelog*](https://keepac
 - **Proteksi Live Show pada `/reset` (F-003):**
   - Endpoint `/reset` kini dilengkapi pengaman HTTP 409 Conflict yang menolak penghapusan NVS jika paket data DMX sedang aktif streaming (< 3 detik) untuk mencegah insiden panggung gelap akibat klik tak disengaja.
 
-### 🧪 Verification
+### Verification
 - **Playwright Chrome E2E Test Suite** (`tools/test_web_playwright_chrome.py`):
   - Suite terautomasi mengekstrak 3 template HTML langsung dari sumber firmware, menjalankan mock server, dan mengemudi Chrome pada 2 viewport (Samsung Galaxy S24 FE 390×844 & Acer Swift 3 1536×864). Menvalidasi *zero horizontal overflow*, touch target ≥44px, alur form→`/connect`→kartu konfirmasi, dan navigasi dua arah.
 - **Anti-Slop & Style Hygiene:**
@@ -37,21 +37,21 @@ Format pencatatan mengikuti standar industri [*Keep a Changelog*](https://keepac
 
 ---
 
-## 🌟 [v5.1.0] — Hardened Production Master (`firmware/artnet_dmx_final.ino`) — 2026-11
+## [v5.1.0] - Hardened Production Master (`firmware/artnet_dmx_final.ino`) - 2026-11
 *Lock-Free Triple Buffering & Portable Timing Optimizations.*
 
-### 🛡️ Hardening & Correctness
+### Hardening & Correctness
 - **Lock-Free Triple Buffering:**
-  - Arsitektur DMX ditingkatkan dari *ping-pong* double buffer ke **triple buffer** `dmx_buf_pool[3][512]` (`dmx_tx_buffer` / `dmx_ready_buffer` / `dmx_rx_buffer`). Setiap buffer dimiliki eksklusif oleh satu peran (transmit / ready / receive), sehingga writer **tidak pernah** menyentuh buffer yang sedang ditransmisikan Core 0 — *frame tearing* tereliminasi penuh.
+  - Arsitektur DMX ditingkatkan dari *ping-pong* double buffer ke **triple buffer** `dmx_buf_pool[3][512]` (`dmx_tx_buffer` / `dmx_ready_buffer` / `dmx_rx_buffer`). Setiap buffer dimiliki eksklusif oleh satu peran (transmit / ready / receive), sehingga writer **tidak pernah** menyentuh buffer yang sedang ditransmisikan Core 0, sehingga *frame tearing* tereliminasi penuh.
 - **Portable Delay & Boot LCD Cleanup:**
   - Delay portabel Arduino dioptimalkan, urutan LCD saat boot dibersihkan, dan header CORS dilengkapi pada endpoint untuk integrasi telemetri lintas origin.
 
 ---
 
-## 🌟 [v5.0.0] — Production Final Release (`firmware/artnet_dmx_final.ino` & `artnet_dmx_v5.txt`) — 2026-11
+## [v5.0.0] - Production Final Release (`firmware/artnet_dmx_final.ino` & `artnet_dmx_v5.txt`) - 2026-11
 *Production Master Release: Absolute-Deadline Periodic Pacing (43.07 FPS STFT-Matched), Atomic Art-Net Packet Reception Counter, Dynamic Telemetry Status API, and Verified PAR LED Hardware Readiness.*
 
-### 🔧 Fixed & Improved
+### Fixed & Improved
 - **Periodic Pacing Absorpsi Transmisi (`esp_timer`):**
   - Mengganti `vTaskDelay(22)` aditif pada Core 0 dengan pencatatan waktu awal frame (`frame_start_us`) dan penghitungan sisa waktu terhadap `DMX_PERIOD_US = 23220` (~43.07 FPS nominal). Durasi transmisi fisik serial ~22.68 ms kini diserap secara tepat, dan `vTaskDelay(1)` minimal menjamin watchdog timer Core 0 selalu bernapas tanpa risiko restart.
 - **Atomic Art-Net Packet Counter (`artnet_rx_count`):**
@@ -61,10 +61,10 @@ Format pencatatan mengikuti standar industri [*Keep a Changelog*](https://keepac
 
 ---
 
-## 🌟 [v4.0.0] — Final Production Release (`firmware/artnet_dmx_final.ino` & `v4.txt`) — 2026-08
+## [v4.0.0] - Final Production Release (`firmware/artnet_dmx_final.ino` & `v4.txt`) - 2026-08
 *Master Production Release: Dual-Core FreeRTOS SMP, Atomic Spinlock Double-Buffering, Full Captive Portal DNS Hijacking, 11-State Machine LCD, Fail-Safe Blackout 10 Detik, dan 58 Aset Visual Terindeks.*
 
-### ✨ Added (Fitur Firmware & Dokumentasi)
+### Added (Fitur Firmware & Dokumentasi)
 - **FreeRTOS Symmetric Multiprocessing (SMP) Architecture:**
   - Task `DMXLoop` diikat secara eksklusif ke **Core 0** (`xTaskCreatePinnedToCore`) dengan prioritas tertinggi (`configMAX_PRIORITIES - 1`), menghasilkan sinyal fisik DMX512-A (250 kbps, 8N2) secara deterministik pada *refresh rate* stabil **44.1 Hz** dengan *zero-jitter* ($<0.05\,\mu\text{s}$).
   - **Core 1** menangani seluruh tumpukan jaringan (*WiFi UDP 6454*, *Captive Portal DNS*, *WebServer HTTP 80*, *Client-Side Clock*, dan *NVS Storage*).
@@ -90,52 +90,52 @@ Format pencatatan mengikuti standar industri [*Keep a Changelog*](https://keepac
 - **Fail-Safe & Safety Protections:**
   - **Blackout Safety Timeout (10 Detik):** Pelacakan `lastArtNetTime` otomatis mengosongkan seluruh 512 slot DMX menjadi nilai `0` jika software pengendali di laptop mati/terputus, mencegah panas berlebih pada fixture.
 - **Suite Visual Terindeks Lengkap (58 Visual):**
-  - 1 Master Result Banner 16:9 (`images/RESULT.png` — Gambar 1.1).
-  - 22 Gambar Katalog Alat dan Bahan Putih Bersih (`images/` — Gambar 2.1 s/d 2.22).
-  - 5 Skematik dan Diagram Arsitektur 300 DPI (`schematics/` — Gambar 3.1 s/d 3.5).
-  - 30 Foto Fabrikasi Fisik Autentik (`docs/` — Gambar 4.1 s/d 4.30).
+  - 1 Master Result Banner 16:9 (`images/RESULT.png` - Gambar 1.1).
+  - 22 Gambar Katalog Alat dan Bahan Putih Bersih (`images/` - Gambar 2.1 s/d 2.22).
+  - 5 Skematik dan Diagram Arsitektur 300 DPI (`schematics/` - Gambar 3.1 s/d 3.5).
+  - 30 Foto Fabrikasi Fisik Autentik (`docs/` - Gambar 4.1 s/d 4.30).
   - Laporan Riset Formal Komprehensif (`docs/REPORT.pdf`).
 
 ---
 
-## 🔄 [v3.0.0] (`firmware/artnet_dmx_v3.txt`) — Double Buffering & Timing Precision — 2026-07
+## [v3.0.0] (`firmware/artnet_dmx_v3.txt`) - Double Buffering & Timing Precision - 2026-07
 *Double Buffering, Spinlock Mutex, & DMX Timing Precision.*
 
-### ✨ Added
+### Added
 - Arsitektur *Ping-Pong Buffer* dengan pointer ganda `writeBuffer` dan `readBuffer`.
 - Proteksi memori menggunakan `portMUX_TYPE` spinlock untuk menjamin integritas data lintas inti prosesor.
 - Filter Sub-Net dan Universe pada verifikasi header biner paket ArtDmx (`OpCode 0x5000`).
 
-### 🔧 Fixed
+### Fixed
 - Memperbaiki presisi durasi gelombang *Break* (min. $88\,\mu\text{s}$) dan *Mark After Break / MAB* (min. $8\,\mu\text{s}$) menggunakan teknik *GPIO Bit-Banging + Serial2.flush()* sebelum transmisi byte 512 channel serial.
 
 ---
 
-## 🔄 [v2.0.0] (`firmware/artnet_dmx_v2.txt`) — Multi-Core Splitting — 2026-06
+## [v2.0.0] (`firmware/artnet_dmx_v2.txt`) - Multi-Core Splitting - 2026-06
 *FreeRTOS Multitasking Task Splitting & Custom WebServer.*
 
-### ✨ Added
+### Added
 - Pemisahan beban kerja komputasi menggunakan `xTaskCreatePinnedToCore`:
   - **Core 0:** Khusus mengeksekusi *loop* transmisi serial RS-485 DMX512 pada baudrate 250.000 bps.
   - **Core 1:** Menjalankan `loop()` standar untuk penanganan socket UDP Art-Net dan WebServer konfigurasi.
 - Eksplorasi otentikasi jaringan kampus WPA2-Enterprise (`WiFi.begin(ssid, WPA2_AUTH_PEAP, ...)`).
 
-### ⚡ Changed
+### Changed
 - Menghapus ketergantungan pada pustaka pihak ketiga `WiFiManager` dan beralih ke implementasi `WebServer.h` bawaan ESP32.
 
 ---
 
-## 🔄 [v1.0.0] (`firmware/artnet_dmx_v1.txt`) — Proof of Concept (PoC) — 2026-05
+## [v1.0.0] (`firmware/artnet_dmx_v1.txt`) - Proof of Concept (PoC) - 2026-05
 *Proof of Concept (PoC) & Baseline Evaluation.*
 
-### ✨ Added
+### Added
 - Implementasi awal modul konverter Art-Net ke DMX512 menggunakan pustaka open-source (`WiFiManager` dan `ArtnetWifi`).
 - Pengujian komunikasi dasar paket UDP port 6454 menuju modul transceiver MAX485 pada channel 1–512.
 - Pengujian fisik pertama pada fixture lampu panggung PAR LED RGBW.
 
 ---
 
-## 🔮 Roadmap v6.0 (Community Edition) — Ide untuk Versi Berikutnya
+## Roadmap v6.0 (Community Edition) - Ide untuk Versi Berikutnya
 
 Bagi Anda yang ingin melanjutkan tongkat estafet pengembangan ke **v6.0.0**, berikut adalah beberapa ide fitur keren yang siap dieksekusi:
 
@@ -150,19 +150,19 @@ Bagi Anda yang ingin melanjutkan tongkat estafet pengembangan ke **v6.0.0**, ber
 
 ---
 
-## 💬 Pesan Hangat untuk Pengguna, Pembuat (Makers), & Forkers (Pengembang v5)
+## Pesan Hangat untuk Pengguna, Pembuat (Makers), & Forkers (Pengembang v5)
 
-> Halo rekan-rekan sesama *developer*, *lighting designer*, teknisi panggung, mahasiswa, dan komunitas *DIY maker* di mana pun Anda berada! 👋✨
+> Halo rekan-rekan sesama *developer*, *lighting designer*, teknisi panggung, mahasiswa, dan komunitas *DIY maker* di mana pun Anda berada!
 
 Proyek **ESP32 Wireless Art-Net to DMX512 Node (ZZLIGHT)** ini saya rilis sepenuhnya sebagai **perangkat lunak dan desain perangkat keras Open Source (Apache License 2.0)**. Bagi saya pribadi, pengembangan inti modul ini telah **tuntas sampai versi v5.2.0** (Hardened Production Master) dan sudah terbukti sangat stabil serta siap pakai di panggung.
 
-### 🚀 Silakan Banget untuk Fork & Kembangkan v6.0!
+### Silakan Fork & Kembangkan v6.0
 Jika Anda memiliki ide untuk menambahkan fitur baru, mendesain custom PCB KiCad SMD, membuat versi multi-universe, atau menambahkan protokol sACN E1.31 untuk melahirkan **Versi 6 (v6.0.0)**:
-* **Silakan banget  di-fork, dimodifikasi, dan dikembangkan sesuka hati!**
+* **Silakan di-fork, dimodifikasi, dan dikembangkan sesuai kebutuhan!**
 * Repositori ini bebas Anda jadikan basis riset skripsi, produk komersial, maupun perlengkapan panggung rental Anda sendiri.
 * Kami sangat senang jika Anda membagikan kembali hasil inovasi Anda via **Pull Request** atau *showcase* di GitHub kami ([`@zzdevxx`](https://github.com/zzdevxx)).
 
-### 🛠️ Tips Penting bagi yang Merakit Sendiri (*DIY Builders*):
+### Tips Penting bagi yang Merakit Sendiri (*DIY Builders*):
 1. **Suplai Daya 5V:** Gunakan kabel data tembaga tebal dan adaptor berkualitas minimal 1A–2A agar radio WiFi ESP32 tidak drop saat mengirim paket data intensif.
 2. **Kapasitor Decoupling:** Sangat disarankan menyolder kapasitor keramik $100\,\text{nF}$ tepat di pin VCC-GND modul MAX485 untuk meredam noise frekuensi tinggi.
 3. **Resistor Terminasi $120\,\Omega$:** Jika kabel DMX panggung Anda panjang (>30–50 meter), pasang resistor $120\,\Omega$ ($0.25\text{W}$) pada soket XLR lampu paling ujung untuk mencegah pantulan sinyal (*signal reflection*).
@@ -170,10 +170,10 @@ Jika Anda memiliki ide untuk menambahkan fitur baru, mendesain custom PCB KiCad 
 ---
 
 <div align="center">
-  <b>⭐ Jika proyek ini bermanfaat untuk panggung atau penelitian Anda, jangan lupa tinggalkan Star di GitHub! ⭐</b><br/>
-  <i>Happy Making, Happy Coding, and Let the Lights Shine Bright! 💡🎛️🔥</i>
+  <b>Jika proyek ini bermanfaat untuk panggung atau penelitian Anda, tinggalkan Star di GitHub.</b><br/>
+  <i>Happy Making, Happy Coding, and Let the Lights Shine Bright!</i>
   <br/><br/>
   <b>Salam hangat dari Semarang,</b><br/>
   <b>Andreas Restuawanta Christwara</b> (<a href="https://github.com/zzdevxx">@zzdevxx</a>)<br/>
-  <i>Teknik Komputer — Universitas Negeri Semarang (UNNES)</i>
+  <i>Teknik Komputer - Universitas Negeri Semarang (UNNES)</i>
 </div>

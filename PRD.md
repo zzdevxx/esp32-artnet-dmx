@@ -1,4 +1,4 @@
-# 📋 Product Requirements Document (PRD)
+# Product Requirements Document (PRD)
 # ZZLIGHT Art-Net to DMX512 Converter Module
 
 > **Dokumen Spesifikasi Kebutuhan Produk & Arsitektur Sistem Node Perangkat Keras**  
@@ -6,7 +6,7 @@
 
 ---
 
-## 📌 Metadata Dokumen
+## Metadata Dokumen
 - **Nama Produk:** ZZLIGHT Art-Net to DMX512 Converter Module
 - **Kode Proyek:** `ZZLIGHT-HW-01`
 - **Versi Produk:** `v5.2.0` (Hardened Production Master)
@@ -18,7 +18,7 @@
 
 ---
 
-## 1. 📖 Executive Summary & Latar Belakang
+## 1. Executive Summary & Latar Belakang
 
 ### 1.1 Problem Statement
 Pada instalasi tata cahaya panggung (*stage lighting*) modern seperti di gedung pertunjukan, gereja, dan konser musik, kabel transmisi sinyal DMX512 konvensional yang ditarik dari meja operator (*front of house / FOH*) ke panggung seringkali rentan putus, memakan waktu setup yang lama, dan menimbulkan kekacauan kabel (*cable clutter*). Modul konverter komersial yang ada di pasaran umumnya berharga mahal (jutaan rupiah), tertutup (*proprietary*), dan tidak memiliki indikator visual status jaringan lokal secara langsung.
@@ -32,7 +32,7 @@ Membangun modul konverter node **Art-Net to DMX512 nirkabel mandiri** yang:
 
 ---
 
-## 2. 🛒 Hardware Specifications & Bill of Materials (BOM)
+## 2. Hardware Specifications & Bill of Materials (BOM)
 
 | Indeks Gambar | Komponen / Alat | Model / Tipe | Spesifikasi Kunci | Fungsi dalam Sistem |
 |:---:|:---|:---|:---|:---|
@@ -61,7 +61,7 @@ Membangun modul konverter node **Art-Net to DMX512 nirkabel mandiri** yang:
 
 ---
 
-## 3. 🖼️ Visual Assets & Architecture Cross-Reference
+## 3. Visual Assets & Architecture Cross-Reference
 
 | Indeks Visual | Nama Berkas | Lokasi File | Deskripsi & Peran Arsitektural |
 |:---:|:---|:---|:---|
@@ -72,7 +72,7 @@ Membangun modul konverter node **Art-Net to DMX512 nirkabel mandiri** yang:
 
 ---
 
-## 4. 🔌 Hardware Wiring & Pinout Contract
+## 4. Hardware Wiring & Pinout Contract
 
 ```text
 +-----------------------------------------------------------------------------------------+
@@ -99,7 +99,7 @@ Membangun modul konverter node **Art-Net to DMX512 nirkabel mandiri** yang:
 
 ---
 
-## 5. 🧠 Arsitektur FreeRTOS Dual-Core SMP & Triple Buffering
+## 5. Arsitektur FreeRTOS Dual-Core SMP & Triple Buffering
 
 ```text
 +-----------------------------------------------------------------------------------------+
@@ -124,7 +124,7 @@ Membangun modul konverter node **Art-Net to DMX512 nirkabel mandiri** yang:
 
 ---
 
-## 6. 🌐 Captive Portal, 11-State LCD, & Fail-Safe Blackout
+## 6. Captive Portal, 11-State LCD, & Fail-Safe Blackout
 
 1. **Captive Portal DNS Hijacking:** Menggunakan `DNSServer` port 53 untuk mengarahkan seluruh query DNS (`*`) ke IP `192.168.4.1`, memicu pop-up login otomatis di Android, iOS, dan Windows.
 2. **11-State Machine LCD:** Menampilkan status dinamis mulai dari Booting, Scanning, AP Mode, Connected, Live FPS Monitor, hingga Error States secara diferensial.
@@ -132,7 +132,7 @@ Membangun modul konverter node **Art-Net to DMX512 nirkabel mandiri** yang:
 
 ---
 
-## 7. 🎯 Kriteria Penerimaan & Evaluasi Kinerja (Acceptance Benchmarks)
+## 7. Kriteria Penerimaan & Evaluasi Kinerja (Acceptance Benchmarks)
 
 | Parameter Pengujian | Target Kebutuhan Produk | Hasil Evaluasi Sistem | Status |
 |:---|:---:|:---:|:---:|

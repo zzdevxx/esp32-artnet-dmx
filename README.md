@@ -1,4 +1,4 @@
-﻿# 🎛️ ESP32 Wireless Art-Net to DMX512 Node (ZZLIGHT)
+﻿# ESP32 Wireless Art-Net to DMX512 Node (ZZLIGHT)
 
 [![Hardware Status](https://img.shields.io/badge/Hardware-Production--Ready%20(Grade%20A)-success?style=for-the-badge&logo=espressif&logoColor=white)](https://gitlab.com/zzdevxx/esp32-artnet-dmx)
 [![Protocol Support](https://img.shields.io/badge/Protocols-Art--Net%204%20%7C%20USITT%20DMX512--A-blue?style=for-the-badge)](https://gitlab.com/zzdevxx/esp32-artnet-dmx)
@@ -10,15 +10,15 @@
 
 ---
 
-## 📁 Visual Assets & Documentation Links
-* 🎬 **[RESULT.png](images/RESULT.png)** — Live stage setup banner (Acer Swift 3 running QLC+, Box X4 enclosure, 4 PAR LED 54-eye fixtures).
-* 📄 **[REPORT.pdf](docs/REPORT.pdf)** — Complete PDF project report with all 58 indexed figures, schematics, and build logs.
-* 📦 **[images/](images/)** — Catalog of 22 hardware tools & components.
-* 📐 **[schematics/](schematics/)** — 5 High-resolution engineering schematics & architecture diagrams (300 DPI).
-* 📸 **[docs/](docs/)** — 30 Step-by-step fabrication & testing photos.
-* 📋 **[PRD.md](PRD.md)** — Product Requirements Document.
-* 📑 **[REVIEW.md](REVIEW.md)** — Architectural & Signal Integrity Review.
-* 📝 **[CHANGELOG.md](CHANGELOG.md)** — Version history and roadmap notes.
+## Visual Assets & Documentation Links
+* **[RESULT.png](images/RESULT.png)** - Live stage setup banner (Acer Swift 3 running QLC+, Box X4 enclosure, 4 PAR LED 54-eye bench fixtures; GIA Deliksari stage rig profiles are cataloged in `zz-fixture` including `zzdree-36X` and `Alien-AL36`).
+* **[REPORT.pdf](docs/REPORT.pdf)** - Complete PDF project report with all 58 indexed figures, schematics, and build logs.
+* **[images/](images/)** - Catalog of 22 hardware tools & components.
+* **[schematics/](schematics/)** - 5 High-resolution engineering schematics & architecture diagrams (300 DPI).
+* **[docs/](docs/)** - 30 Step-by-step fabrication & testing photos.
+* **[PRD.md](PRD.md)** - Product Requirements Document.
+* **[REVIEW.md](REVIEW.md)** - Architectural & Signal Integrity Review.
+* **[CHANGELOG.md](CHANGELOG.md)** - Version history and roadmap notes.
 
 ---
 
@@ -32,28 +32,28 @@ Proyek ini merupakan modul perangkat keras penerima dari ekosistem riset terinte
 | **Software Konsol** | [**`zzdevxx/zzluxora`**](https://github.com/zzdevxx/zzluxora) | Perangkat lunak konsol pencahayaan panggung cerdas (Python 3.10+, PySide6/Qt6, NumPy STFT/MIR Core Engine, grandMA3 style mixer 513 fader, 2D/3D stage visualizer, Art-Net 4 DMX512 UDP transmitter). |
 | **Library Fixture** | [**`zzdevxx/zz-fixture`**](https://github.com/zzdevxx/zz-fixture) | Katalog profil fixture pencahayaan `.qxf` & `.zfx`, showfile template, serta skema parameter DMX 3-8 channel yang sinkron dengan engine ZZLUXORA. |
 | **Naskah & Riset** | [**`zzdevxx/zzluxora-thesis`**](https://gitlab.com/zzdevxx/zzluxora-thesis) | Naskah akademik skripsi S1 Teknik Komputer FT UNNES, pemodelan matematis STFT Hann & Russell 2D, protokol uji lapangan 41-kolom, instrumen evaluasi (SUS & Kesesuaian), serta draf ilmiah Bab 1-5 lengkap. |
-| **Portal Unduhan** | [**`zzdree.my.id/zzluxora/`**](https://zzdree.my.id/zzluxora/) | Halaman portal rilis resmi ZZLUXORA v10.0 (`ZZLUXORA-Setup-10.0.0.exe`) dan simulator interaktif RGBW DMX512 ([`zzdevxx/zzluxora-download`](https://github.com/zzdevxx/zzluxora-download)). |
+| **Portal Unduhan** | [**`zzdree.my.id/zzluxora/`**](https://zzdree.my.id/zzluxora/) | Halaman portal rilis resmi ZZLUXORA v10.1 (`ZZLUXORA-Setup-10.1.0.exe`) dan simulator interaktif RGBW DMX512 ([`zzdevxx/zzluxora-download`](https://github.com/zzdevxx/zzluxora-download)). |
 
 ---
 
-## ⚡ Quick Navigation
+## Quick Navigation
 
-- [✨ Key Features](#-key-features)
-- [🛒 Hardware & Bill of Materials (BOM)](#-hardware--bill-of-materials-bom)
-- [📐 Schematics & Pinout Wiring](#-schematics--pinout-wiring)
-- [🛠️ Fabrication & Assembly Summary](#️-fabrication--assembly-summary)
-- [🧠 Firmware & Dual-Core Architecture](#-firmware--dual-core-architecture)
-- [🚀 Quick Start: Flashing the Firmware](#-quick-start-flashing-the-firmware)
-- [🌐 WiFi Setup via Captive Portal](#-wifi-setup-via-captive-portal)
-- [🎛️ Universal Software Compatibility](#️-universal-software-compatibility)
-- [📊 Test Results & Performance](#-test-results--performance)
-- [🔮 Roadmap v6.0 (Community Edition)](#-roadmap-v60-community-edition--invitation-to-fork)
-- [💬 Message to Makers & Forkers](#-message-to-makers--forkers)
-- [📜 License & Credits](#-license--credits)
+- [Key Features](#key-features)
+- [Hardware & Bill of Materials (BOM)](#hardware--bill-of-materials-bom)
+- [Schematics & Pinout Wiring](#schematics--pinout-wiring)
+- [Fabrication & Assembly Summary](#fabrication--assembly-summary)
+- [Firmware & Dual-Core Architecture](#firmware--dual-core-architecture)
+- [Quick Start: Flashing the Firmware](#quick-start-flashing-the-firmware)
+- [WiFi Setup via Captive Portal](#wifi-setup-via-captive-portal)
+- [Universal Software Compatibility](#universal-software-compatibility)
+- [Test Results & Performance](#test-results--performance)
+- [Roadmap v6.0 (Community Edition)](#roadmap-v60-community-edition--invitation-to-fork)
+- [Message to Makers & Forkers](#message-to-makers--forkers)
+- [License & Credits](#license--credits)
 
 ---
 
-## ✨ Key Features
+## Key Features
 
 - **🚀 FreeRTOS Dual-Core SMP Engine:**
   - **Core 0 (Dedicated DMX):** Generates strict USITT DMX512-A serial timing (Break $\ge 88\,\mu\text{s}$, MAB $\ge 8\,\mu\text{s}$) with a **43.07 Hz nominal refresh** (period $23220\,\mu\text{s}$). Pacing uses an absolute `esp_timer` deadline, so the average period is stable; per-frame jitter is bounded by the 1 ms FreeRTOS tick and has not yet been measured with an oscilloscope.
@@ -71,7 +71,7 @@ Proyek ini merupakan modul perangkat keras penerima dari ekosistem riset terinte
 
 ---
 
-## 🛒 Hardware & Bill of Materials (BOM)
+## Hardware & Bill of Materials (BOM)
 
 Total estimated cost to build this module is under **\$10 / Rp 150.000**. Here are all 22 parts and tools:
 
@@ -104,9 +104,9 @@ Total estimated cost to build this module is under **\$10 / Rp 150.000**. Here a
 
 ---
 
-## 📐 Schematics & Pinout Wiring
+## Schematics & Pinout Wiring
 
-### 🔌 Pinout Connection Table
+### Pinout Connection Table
 
 ```text
 +-------------------+--------------------+------------------------+-----------------------+
@@ -128,16 +128,16 @@ Total estimated cost to build this module is under **\$10 / Rp 150.000**. Here a
 +-------------------+--------------------+------------------------+-----------------------+
 ```
 
-### 📊 Available Schematics (in [`schematics/`](schematics/))
-* **[01_system_block_diagram.png](schematics/01_system_block_diagram.png)** — End-to-end signal flow from lighting software to ESP32 receiver, MAX485 driver, and stage PAR LEDs.
-* **[02_esp32_max485_wiring_schematic.png](schematics/02_esp32_max485_wiring_schematic.png)** — Complete wiring schematic between ESP32 DevKit V1, MAX485 transceiver, I2C LCD, and 3-pin XLR socket.
-* **[03_dmx512_timing_diagram.png](schematics/03_dmx512_timing_diagram.png)** — DMX512-A frame waveform at 250 kbps (Break >= 88µs, MAB >= 8µs, Start Code 0x00, 512 channels, 43.07 Hz nominal).
-* **[04_freertos_dual_core_architecture.png](schematics/04_freertos_dual_core_architecture.png)** — Task separation between Core 0 (Real-Time DMX Generation) and Core 1 (Networking & Web UI) via Spinlock Double Buffering.
-* **[05_lcd16x2_state_machine_flowchart.png](schematics/05_lcd16x2_state_machine_flowchart.png)** — State machine transition diagram for LCD 16x2 status indicators, auto-recovery, and blackout modes.
+### Available Schematics (in [`schematics/`](schematics/))
+* **[01_system_block_diagram.png](schematics/01_system_block_diagram.png)** - End-to-end signal flow from lighting software to ESP32 receiver, MAX485 driver, and stage PAR LEDs.
+* **[02_esp32_max485_wiring_schematic.png](schematics/02_esp32_max485_wiring_schematic.png)** - Complete wiring schematic between ESP32 DevKit V1, MAX485 transceiver, I2C LCD, and 3-pin XLR socket.
+* **[03_dmx512_timing_diagram.png](schematics/03_dmx512_timing_diagram.png)** - DMX512-A frame waveform at 250 kbps (Break >= 88us, MAB >= 8us, Start Code 0x00, 512 channels, 43.07 Hz nominal).
+* **[04_freertos_dual_core_architecture.png](schematics/04_freertos_dual_core_architecture.png)** - Task separation between Core 0 (Real-Time DMX Generation) and Core 1 (Networking & Web UI) via Spinlock Double Buffering.
+* **[05_lcd16x2_state_machine_flowchart.png](schematics/05_lcd16x2_state_machine_flowchart.png)** - State machine transition diagram for LCD 16x2 status indicators, auto-recovery, and blackout modes.
 
 ---
 
-## 🛠️ Fabrication & Assembly Summary
+## Fabrication & Assembly Summary
 
 The complete step-by-step physical build process (with 30 photos in [`docs/`](docs/)) consists of 4 main phases:
 
@@ -148,7 +148,7 @@ The complete step-by-step physical build process (with 30 photos in [`docs/`](do
 
 ---
 
-## 🧠 Firmware & Dual-Core Architecture
+## Firmware & Dual-Core Architecture
 
 The production firmware [`firmware/artnet_dmx_final.ino`](firmware/artnet_dmx_final.ino) is optimized for zero-latency stage performance:
 
@@ -199,13 +199,13 @@ void DMXCoreTask(void *pvParameters) {
 
 ---
 
-## 🚀 Quick Start: Flashing the Firmware
+## Quick Start: Flashing the Firmware
 
 ### Metode 1: 1-Click Flash Otomatis (Rekomendasi Cepat)
 1. Hubungkan ESP32 DevKit V1 ke laptop menggunakan kabel data Micro-USB.
 2. Jalankan skrip flasher otomatis via PowerShell atau klik ganda `flash.bat`:
    ```powershell
-   cd D:\ANDREAS\esp32-artnet-dmx
+   cd D:\ANDREAS\PERSONAL\esp32-artnet-dmx
    .\tools\flash.bat
    ```
    *Skrip otomatis mendeteksi port COM, memverifikasi biner terkompilasi di `build/`, dan melakukan flashing berkecepatan 921.600 baud via `esptool` dalam <10 detik.*
@@ -223,7 +223,7 @@ void DMXCoreTask(void *pvParameters) {
 
 ---
 
-## 🌐 WiFi Setup via Captive Portal
+## WiFi Setup via Captive Portal
 
 1. Power on the module.
 2. On your phone or laptop, connect to the WiFi network: **`ARTNET-DMX`**.
@@ -233,7 +233,7 @@ void DMXCoreTask(void *pvParameters) {
 
 ---
 
-## 🎛️ Universal Software Compatibility
+## Universal Software Compatibility
 
 The node accepts standard **Art-Net 4 DMX packets (OpCode `0x5000`) on UDP Port 6454** and applies only **Port-Address 0** (Net 0, SubUni 0); packets for any other universe are silently dropped. Send your console output to Universe 0.
 
@@ -245,7 +245,7 @@ The node accepts standard **Art-Net 4 DMX packets (OpCode `0x5000`) on UDP Port 
 
 ---
 
-## 📊 Test Results & Performance
+## Test Results & Performance
 
 | Metric | Target Requirement | Test Result | Status |
 |:---|:---:|:---:|:---:|
@@ -257,7 +257,7 @@ The node accepts standard **Art-Net 4 DMX packets (OpCode `0x5000`) on UDP Port 
 
 ---
 
-## 🔮 Roadmap v6.0 (Community Edition) & Invitation to Fork
+## Roadmap v6.0 (Community Edition) & Invitation to Fork
 
 > 💡 **Project Status:** This project is officially finalized and stable at **v5.2.0 (Hardened Production Master)**. It is thoroughly verified and ready for flashing to ESP32 DevKit V1 and driving physical stage PAR LED fixtures. For future community improvements, you are warmly invited to fork, experiment, and contribute! (*Silakan dikembangkan sesuka hati!*) 🎉
 
@@ -273,14 +273,14 @@ Recommended features for v6:
 
 ---
 
-## 💬 Message to Makers & Forkers
+## Message to Makers & Forkers
 
 * **Feel free to DIY build this node:** All schematics, BOM, and step-by-step photos are provided under the Apache-2.0 license.
 * **Feel free to fork & create v6:** Build custom KiCad SMD PCBs, 3D printed enclosures, or multi-port nodes. We'd love to see your creations!
 
 ---
 
-## 📜 License & Credits
+## License & Credits
 
 * **Author:** **Andreas Restuawanta Christwara** ([@zzdevxx](https://github.com/zzdevxx))
 * **Institution:** Universitas Negeri Semarang (UNNES), Computer Engineering.
